@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { RequestPriority } from "@prisma/client";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
+import { forwardToCrm } from "@/lib/services/crm-bridge";
 import type { SupportRequestInput, TrackedRequest } from "@/lib/validation/support";
 
 async function nextReferenceNumber(): Promise<string> {
@@ -45,6 +46,21 @@ export async function submitSupportRequest(input: SupportRequestInput): Promise<
       priority,
       status: "SUBMITTED",
     },
+  });
+
+  const bridgeResult = await forwardToCrm({
+    firstName: input.firstName,
+    lastName: input.lastName,
+    email: input.email,
+    phone: input.phone,
+    businessUnit: input.businessUnit,
+    category: input.category,
+    subject: input.subject,
+    description: input.description,
+  });
+  await prisma.supportRequest.update({
+    where: { id: record.id },
+    data: bridgeResult.ok ? { crmTicketNumber: bridgeResult.ticketNumber } : { crmSyncError: bridgeResult.error },
   });
 
   return { referenceNumber: record.referenceNumber, expectedResponseBy: new Date(Date.now() + ETA_HOURS[priority] * 60 * 60 * 1000) };
