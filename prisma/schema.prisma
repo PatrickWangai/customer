@@ -24,7 +24,10 @@ enum RequestStatus {
 /// Standalone capture store for the public Help & Support portal. This app
 /// has no login and no staff-facing queue — it only collects and lets
 /// submitters track their own requests. Deliberately independent of the
-/// main Masterways CRM's database.
+/// main Masterways CRM's database and codebase; crmTicketNumber is set by
+/// a best-effort server-to-server bridge call at submission time (see
+/// lib/services/crm-bridge.ts) so staff still see it in the CRM's own
+/// Tickets queue — it is not kept in sync afterward.
 model SupportRequest {
   id              String           @id @default(cuid())
   referenceNumber String           @unique
@@ -38,6 +41,8 @@ model SupportRequest {
   description     String
   priority        RequestPriority  @default(MEDIUM)
   status          RequestStatus    @default(SUBMITTED)
+  crmTicketNumber String?
+  crmSyncError    String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 

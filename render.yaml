@@ -17,3 +17,14 @@ services:
         value: support@masterways.co.ke
       - key: NODE_ENV
         value: production
+      # Server-to-server bridge into the main CRM (separate repo/deployment)
+      # so a submission here also creates a real Ticket there. Set
+      # CRM_API_URL to the CRM's live URL (e.g.
+      # https://masterways-crm.onrender.com — no trailing slash needed).
+      # PUBLIC_API_KEY must match the CRM's own PUBLIC_API_KEY exactly, or
+      # the bridge call is rejected with 401 and the request stays
+      # capture-only (still succeeds locally, just doesn't forward).
+      - key: CRM_API_URL
+        value: https://masterways-crm.onrender.com
+      - key: PUBLIC_API_KEY
+        value: 7ff32f1144d2c129a717f4c33919b46dded463dd5a4e17ed12bc8402683f80f9
