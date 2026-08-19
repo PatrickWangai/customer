@@ -155,6 +155,14 @@ export function PublicSupportForm() {
         </div>
       )}
 
+      <p className="text-xs text-muted-foreground">
+        We use the details above only to respond to this request and route it to the right team — never for marketing. See our{" "}
+        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+          Privacy Notice
+        </a>{" "}
+        for details.
+      </p>
+
       <SubmitButton />
     </form>
   );
