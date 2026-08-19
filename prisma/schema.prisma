@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RequestPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum RequestStatus {
+  SUBMITTED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+/// Standalone capture store for the public Help & Support portal. This app
+/// has no login and no staff-facing queue — it only collects and lets
+/// submitters track their own requests. Deliberately independent of the
+/// main Masterways CRM's database.
+model SupportRequest {
+  id              String           @id @default(cuid())
+  referenceNumber String           @unique
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  businessUnit    String?
+  category        String
+  subject         String
+  description     String
+  priority        RequestPriority  @default(MEDIUM)
+  status          RequestStatus    @default(SUBMITTED)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([email])
+  @@map("support_requests")
+}
