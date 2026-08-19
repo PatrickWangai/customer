@@ -7,16 +7,23 @@ import {
   type TrackRequestFormState,
 } from "@/lib/validation/support";
 import { submitSupportRequest, trackSupportRequest } from "@/lib/services/support.service";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 function friendlyError(err: unknown): string {
   return err instanceof Error ? err.message : "Something went wrong. Please try again.";
 }
+
+const RATE_LIMIT_MESSAGE = "Too many requests from your connection. Please wait a few minutes and try again.";
 
 export async function submitSupportRequestAction(_prev: SupportFormState, formData: FormData): Promise<SupportFormState> {
   // Honeypot: a real visitor never fills this hidden field. Bots that do get a
   // fake "success" response so they don't learn to leave it empty next time.
   if (formData.get("companyWebsite")) {
     return { success: true, referenceNumber: "REQ-000000" };
+  }
+
+  if (!checkRateLimit("submit", await getClientIp(), 5)) {
+    return { error: RATE_LIMIT_MESSAGE };
   }
 
   const parsed = supportRequestSchema.safeParse({
@@ -40,6 +47,10 @@ export async function submitSupportRequestAction(_prev: SupportFormState, formDa
 }
 
 export async function trackSupportRequestAction(_prev: TrackRequestFormState, formData: FormData): Promise<TrackRequestFormState> {
+  if (!checkRateLimit("track", await getClientIp(), 20)) {
+    return { error: RATE_LIMIT_MESSAGE };
+  }
+
   const parsed = trackRequestSchema.safeParse({
     referenceNumber: formData.get("referenceNumber"),
     email: formData.get("email"),
@@ -70,6 +81,10 @@ export type ChatSubmitResult = { ok: true; referenceNumber: string; expectedResp
  * conversation short (no separate "subject" turn).
  */
 export async function chatSubmitRequestAction(input: ChatRequestInput): Promise<ChatSubmitResult> {
+  if (!checkRateLimit("submit", await getClientIp(), 5)) {
+    return { ok: false, error: RATE_LIMIT_MESSAGE };
+  }
+
   const subject = input.description.length > 80 ? `${input.description.slice(0, 80)}…` : input.description;
 
   const parsed = supportRequestSchema.safeParse({
@@ -95,6 +110,10 @@ export async function chatSubmitRequestAction(input: ChatRequestInput): Promise<
 export type ChatTrackResult = { ok: true; result: NonNullable<Awaited<ReturnType<typeof trackSupportRequest>>> } | { ok: false };
 
 export async function chatTrackRequestAction(referenceNumber: string, email: string): Promise<ChatTrackResult> {
+  if (!checkRateLimit("track", await getClientIp(), 20)) {
+    return { ok: false };
+  }
+
   const parsed = trackRequestSchema.safeParse({ referenceNumber, email });
   if (!parsed.success) return { ok: false };
 
