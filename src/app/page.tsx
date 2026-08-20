@@ -4,8 +4,19 @@ import { PublicSupportForm } from "@/components/support/public-support-form";
 import { TrackRequestForm } from "@/components/support/track-request-form";
 import { HelpChatbot } from "@/components/support/help-chatbot";
 
-export default function HelpAndSupportPage() {
+export default async function HelpAndSupportPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const supportEmail = process.env.SUPPORT_EMAIL || "support@masterways.co.ke";
+  const sp = await searchParams;
+
+  // Lets a "Track your request live" link deep-link straight into "already
+  // looked up" — mirrors the same param handling in the CRM repo's /help page.
+  const initialTab = sp.tab === "track" ? "track" : "submit";
+  const initialTicketNumber = typeof sp.ticketNumber === "string" ? sp.ticketNumber : undefined;
+  const initialEmail = typeof sp.email === "string" ? sp.email : undefined;
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,7 +41,7 @@ export default function HelpAndSupportPage() {
         </div>
 
         <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-          <Tabs defaultValue="submit">
+          <Tabs defaultValue={initialTab}>
             <TabsList>
               <TabsTrigger value="submit">Submit a request</TabsTrigger>
               <TabsTrigger value="track">Track a request</TabsTrigger>
@@ -39,7 +50,7 @@ export default function HelpAndSupportPage() {
               <PublicSupportForm />
             </TabsContent>
             <TabsContent value="track" className="pt-4">
-              <TrackRequestForm />
+              <TrackRequestForm defaultTicketNumber={initialTicketNumber} defaultEmail={initialEmail} />
             </TabsContent>
           </Tabs>
         </div>
