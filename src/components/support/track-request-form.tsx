@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { SupportStageStepper } from "@/components/support/support-stage-stepper";
+import { ResponseCountdown } from "@/components/support/response-countdown";
 import { trackSupportRequestAction } from "@/app/actions";
 import type { TrackRequestFormState } from "@/lib/validation/support";
 
@@ -56,6 +57,7 @@ export function TrackRequestForm() {
           <div className="mt-4 mb-1">
             <SupportStageStepper stage={state.result.stage} activeLabel={state.result.stageLabel} />
           </div>
+          <ResponseCountdown expectedResponseBy={state.result.expectedResponseBy} stage={state.result.stage} />
 
           <p className="mt-3 text-xs text-muted-foreground">Submitted {new Date(state.result.createdAt).toLocaleString()}</p>
         </div>

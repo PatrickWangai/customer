@@ -73,6 +73,7 @@ export interface CrmTicketStatus {
   stage: 1 | 2 | 3;
   stageLabel: string;
   businessUnitName: string | null;
+  expectedResponseBy: string | null;
 }
 
 /**
@@ -94,9 +95,21 @@ export async function pullCrmStatus(crmTicketNumber: string): Promise<CrmTicketS
       { headers: { "x-api-key": apiKey }, signal: AbortSignal.timeout(5000) },
     );
     if (!res.ok) return null;
-    const data = (await res.json()) as { status?: string; stage?: 1 | 2 | 3; stageLabel?: string; businessUnitName?: string | null };
+    const data = (await res.json()) as {
+      status?: string;
+      stage?: 1 | 2 | 3;
+      stageLabel?: string;
+      businessUnitName?: string | null;
+      expectedResponseBy?: string | null;
+    };
     if (!data.status || !data.stage || !data.stageLabel) return null;
-    return { status: data.status, stage: data.stage, stageLabel: data.stageLabel, businessUnitName: data.businessUnitName ?? null };
+    return {
+      status: data.status,
+      stage: data.stage,
+      stageLabel: data.stageLabel,
+      businessUnitName: data.businessUnitName ?? null,
+      expectedResponseBy: data.expectedResponseBy ?? null,
+    };
   } catch {
     return null;
   }
