@@ -67,7 +67,7 @@ export async function trackSupportRequestAction(_prev: TrackRequestFormState, fo
   const result = await trackSupportRequest(parsed.data.referenceNumber, parsed.data.email);
   if (!result) return { error: "We couldn't find a request matching that reference number and email." };
 
-  return { result };
+  return { result, email: parsed.data.email };
 }
 
 export interface ChatRequestInput {

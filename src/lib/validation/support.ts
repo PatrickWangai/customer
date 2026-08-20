@@ -70,4 +70,5 @@ export type TrackRequestInput = z.infer<typeof trackRequestSchema>;
 export interface TrackRequestFormState {
   error?: string;
   result?: TrackedRequest;
+  email?: string;
 }

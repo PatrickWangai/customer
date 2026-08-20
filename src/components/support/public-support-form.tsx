@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -79,7 +79,8 @@ export function PublicSupportForm() {
   // Restore whatever was last submitted, once mounted (sessionStorage is a
   // client-only external system, so this can't happen during render without
   // risking a hydration mismatch — see the comment on activeResult above).
-  // Then background-refreshes with live status when an email is on file;
+  // TrackingResultCard takes over from here with its own background polling
+  // (including an immediate refresh on mount) when an email is on file;
   // phone-only submissions keep whatever snapshot was last saved.
   useEffect(() => {
     const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -93,15 +94,17 @@ export function PublicSupportForm() {
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrating local state from sessionStorage, which isn't available during the server/first-client render
     setActiveResult(saved);
-    if (saved.contactEmail) {
-      chatTrackRequestAction(saved.referenceNumber, saved.contactEmail).then((res) => {
-        if (res.ok) {
-          const refreshed: StoredResult = { ...saved, tracking: res.result };
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(refreshed));
-          setActiveResult(refreshed);
-        }
-      });
-    }
+  }, []);
+
+  // Persists each polled refresh so a reload picks up the freshest known
+  // status instead of the snapshot from whenever the request was submitted.
+  const handleTrackingRefresh = useCallback((tracking: TrackedRequest) => {
+    setActiveResult((prev) => {
+      if (!prev) return prev;
+      const updated: StoredResult = { ...prev, tracking };
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
   }, []);
 
   function startNewRequest() {
@@ -145,7 +148,12 @@ export function PublicSupportForm() {
             </p>
             {contact && <p className="mt-2 text-sm text-muted-foreground">{contact}</p>}
           </div>
-          <TrackingResultCard result={activeResult.tracking} />
+          <TrackingResultCard
+            result={activeResult.tracking}
+            email={activeResult.contactEmail}
+            refreshAction={chatTrackRequestAction}
+            onRefresh={handleTrackingRefresh}
+          />
           <Button variant="outline" className="w-full sm:w-auto" onClick={startNewRequest}>
             Submit another request
           </Button>
