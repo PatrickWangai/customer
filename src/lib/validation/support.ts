@@ -55,6 +55,7 @@ export interface TrackedRequest {
   stage: 1 | 2 | 3;
   stageLabel: string;
   createdAt: string;
+  expectedResponseBy: string | null;
 }
 
 export interface TrackRequestFormState {

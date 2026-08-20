@@ -94,5 +94,6 @@ export async function trackSupportRequest(referenceNumber: string, email: string
     stage,
     stageLabel: label,
     createdAt: record.createdAt.toISOString(),
+    expectedResponseBy: live?.expectedResponseBy ?? null,
   };
 }
