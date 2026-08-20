@@ -1,19 +1,29 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { submitSupportRequestAction } from "@/app/actions";
+import { submitSupportRequestAction, chatTrackRequestAction } from "@/app/actions";
 import { REQUEST_CATEGORIES, BUSINESS_UNITS } from "@/lib/validation/support";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
 import { TrackingResultCard } from "@/components/support/tracking-result-card";
-import type { SupportFormState } from "@/lib/validation/support";
+import type { SupportFormState, TrackedRequest } from "@/lib/validation/support";
 
 const initialState: SupportFormState = {};
+
+/** Survives navigating away and back (or a refresh) within the same tab — cleared when the tab closes. Just this submitter's own data on their own device. */
+const STORAGE_KEY = "masterways-help-last-request";
+
+interface StoredResult {
+  referenceNumber: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  tracking: TrackedRequest;
+}
 
 function contactMessage(email?: string, phone?: string): string | null {
   if (email && phone) return `We'll reach out to you at ${email} or ${phone} as your request moves forward.`;
@@ -42,14 +52,65 @@ export function PublicSupportForm() {
   const suggestionApplied = classification && classification.category === category;
 
   const [popupOpen, setPopupOpen] = useState(false);
+
+  // Starts null so the server render and the client's first render match
+  // (sessionStorage doesn't exist on the server) — restored just after mount
+  // below instead, which avoids a hydration mismatch at the cost of a brief
+  // flash of the form before it swaps to the tracker on an actual restore.
+  const [activeResult, setActiveResult] = useState<StoredResult | null>(null);
+
+  // A fresh, real submission — persist it and show the popup.
   const [prevSuccess, setPrevSuccess] = useState(state.success);
   if (state.success !== prevSuccess) {
     setPrevSuccess(state.success);
-    if (state.success) setPopupOpen(true);
+    if (state.success && state.tracking && state.referenceNumber) {
+      const result: StoredResult = {
+        referenceNumber: state.referenceNumber,
+        contactEmail: state.contactEmail,
+        contactPhone: state.contactPhone,
+        tracking: state.tracking,
+      };
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(result));
+      setActiveResult(result);
+      setPopupOpen(true);
+    }
   }
 
-  if (state.success) {
-    const contact = contactMessage(state.contactEmail, state.contactPhone);
+  // Restore whatever was last submitted, once mounted (sessionStorage is a
+  // client-only external system, so this can't happen during render without
+  // risking a hydration mismatch — see the comment on activeResult above).
+  // Then background-refreshes with live status when an email is on file;
+  // phone-only submissions keep whatever snapshot was last saved.
+  useEffect(() => {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    let saved: StoredResult;
+    try {
+      saved = JSON.parse(raw) as StoredResult;
+    } catch {
+      sessionStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrating local state from sessionStorage, which isn't available during the server/first-client render
+    setActiveResult(saved);
+    if (saved.contactEmail) {
+      chatTrackRequestAction(saved.referenceNumber, saved.contactEmail).then((res) => {
+        if (res.ok) {
+          const refreshed: StoredResult = { ...saved, tracking: res.result };
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(refreshed));
+          setActiveResult(refreshed);
+        }
+      });
+    }
+  }, []);
+
+  function startNewRequest() {
+    sessionStorage.removeItem(STORAGE_KEY);
+    setActiveResult(null);
+  }
+
+  if (activeResult) {
+    const contact = contactMessage(activeResult.contactEmail, activeResult.contactPhone);
     return (
       <>
         {popupOpen && (
@@ -64,8 +125,8 @@ export function PublicSupportForm() {
               <h3 className="mt-3 text-lg font-semibold">Thank you for choosing Masterways</h3>
               <p className="mt-1 text-sm font-medium">Request received</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Your reference number is <span className="font-mono font-semibold text-foreground">{state.referenceNumber}</span>. Keep it —
-                you&apos;ll need it to track your request below.
+                Your reference number is <span className="font-mono font-semibold text-foreground">{activeResult.referenceNumber}</span>. Keep it
+                — you&apos;ll need it to track your request below.
               </p>
               {contact && <p className="mt-2 text-sm text-muted-foreground">{contact}</p>}
               <Button className="mt-4 w-full" onClick={() => setPopupOpen(false)}>
@@ -79,12 +140,15 @@ export function PublicSupportForm() {
             <CheckCircle2 className="mx-auto size-10 text-success" />
             <h3 className="mt-3 text-lg font-semibold">Request received</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Your reference number is <span className="font-mono font-semibold text-foreground">{state.referenceNumber}</span>. Keep it —
+              Your reference number is <span className="font-mono font-semibold text-foreground">{activeResult.referenceNumber}</span>. Keep it —
               you&apos;ll need it to track your request below.
             </p>
             {contact && <p className="mt-2 text-sm text-muted-foreground">{contact}</p>}
           </div>
-          {state.tracking && <TrackingResultCard result={state.tracking} />}
+          <TrackingResultCard result={activeResult.tracking} />
+          <Button variant="outline" className="w-full sm:w-auto" onClick={startNewRequest}>
+            Submit another request
+          </Button>
         </div>
       </>
     );
