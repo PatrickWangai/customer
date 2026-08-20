@@ -33,19 +33,52 @@ export function PublicSupportForm() {
   const classification = useMemo(() => classifyTicket(subject, description), [subject, description]);
   const suggestionApplied = classification && classification.category === category;
 
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [prevSuccess, setPrevSuccess] = useState(state.success);
+  if (state.success !== prevSuccess) {
+    setPrevSuccess(state.success);
+    if (state.success) setPopupOpen(true);
+  }
+
   if (state.success) {
     return (
-      <div className="rounded-lg border border-success/30 bg-success-muted/40 p-6 text-center">
-        <CheckCircle2 className="mx-auto size-10 text-success" />
-        <h3 className="mt-3 text-lg font-semibold">Request received</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your reference number is <span className="font-mono font-semibold text-foreground">{state.referenceNumber}</span>. Keep it — you&apos;ll
-          need it to track your request below.
-        </p>
-        {state.expectedResponseBy && (
-          <p className="mt-2 text-sm text-muted-foreground">Expected response by {new Date(state.expectedResponseBy).toLocaleString()}.</p>
+      <>
+        {popupOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setPopupOpen(false)}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="w-full max-w-sm rounded-lg bg-card p-6 text-center shadow-lg" onClick={(e) => e.stopPropagation()}>
+              <CheckCircle2 className="mx-auto size-10 text-success" />
+              <h3 className="mt-3 text-lg font-semibold">Thank you for choosing Masterways</h3>
+              <p className="mt-1 text-sm font-medium">Request received</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Your reference number is <span className="font-mono font-semibold text-foreground">{state.referenceNumber}</span>. Keep it —
+                you&apos;ll need it to track your request below.
+              </p>
+              {state.expectedResponseBy && (
+                <p className="mt-2 text-sm text-muted-foreground">Expected response by {new Date(state.expectedResponseBy).toLocaleString()}.</p>
+              )}
+              <Button className="mt-4 w-full" onClick={() => setPopupOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
         )}
-      </div>
+        <div className="rounded-lg border border-success/30 bg-success-muted/40 p-6 text-center">
+          <CheckCircle2 className="mx-auto size-10 text-success" />
+          <h3 className="mt-3 text-lg font-semibold">Request received</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your reference number is <span className="font-mono font-semibold text-foreground">{state.referenceNumber}</span>. Keep it —
+            you&apos;ll need it to track your request below.
+          </p>
+          {state.expectedResponseBy && (
+            <p className="mt-2 text-sm text-muted-foreground">Expected response by {new Date(state.expectedResponseBy).toLocaleString()}.</p>
+          )}
+        </div>
+      </>
     );
   }
 
