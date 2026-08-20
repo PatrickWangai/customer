@@ -51,6 +51,15 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   function bot(text: string, replies: string[] = []) {
     setMessages((m) => [...m, { id: nextId++, from: "bot", text }]);
     setQuickReplies(replies);
@@ -219,81 +228,97 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
+    <>
       {open && (
-        <div data-testid="help-chatbot-panel" className="mb-3 flex h-[28rem] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg">
-          <div className="flex items-center justify-between border-b border-border bg-primary/5 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="size-4 text-primary" />
-              <div>
-                <p className="text-sm font-semibold">Masterways Assistant</p>
-                <p className="text-[10px] text-muted-foreground">Rule-based assistant — not a live AI model</p>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setOpen(false);
+          }}
+        >
+          <div
+            data-testid="help-chatbot-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Masterways virtual assistant"
+            className="flex h-[32rem] w-[26rem] max-h-[85vh] max-w-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-xl"
+          >
+            <div className="flex items-center justify-between border-b border-border bg-primary/5 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-4 text-primary" />
+                <div>
+                  <p className="text-sm font-semibold">Masterways Assistant</p>
+                  <p className="text-[10px] text-muted-foreground">Rule-based assistant — not a live AI model</p>
+                </div>
               </div>
+              <button onClick={() => setOpen(false)} className="rounded-md p-1 text-muted-foreground hover:bg-secondary" aria-label="Close chat">
+                <X className="size-4" />
+              </button>
             </div>
-            <button onClick={() => setOpen(false)} className="rounded-md p-1 text-muted-foreground hover:bg-secondary" aria-label="Close chat">
-              <X className="size-4" />
-            </button>
-          </div>
 
-          <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-3">
-            {messages.map((m) => (
-              <div key={m.id} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
-                    m.from === "user" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
-                  }`}
-                >
-                  {m.text}
+            <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-3">
+              {messages.map((m) => (
+                <div key={m.id} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
+                      m.from === "user" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+                    }`}
+                  >
+                    {m.text}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {busy && (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground">
-                  <Loader2 className="size-3.5 animate-spin" /> Thinking...
+              ))}
+              {busy && (
+                <div className="flex justify-start">
+                  <div className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground">
+                    <Loader2 className="size-3.5 animate-spin" /> Thinking...
+                  </div>
                 </div>
+              )}
+            </div>
+
+            {quickReplies.length > 0 && !busy && (
+              <div className="flex flex-wrap gap-1.5 border-t border-border p-2">
+                {quickReplies.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => handleQuickReply(r)}
+                    className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs text-primary hover:bg-primary/10"
+                  >
+                    {r}
+                  </button>
+                ))}
               </div>
             )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleSend();
+              }}
+              className="flex items-center gap-2 border-t border-border p-2"
+            >
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                disabled={busy}
+                placeholder="Describe your problem..."
+                autoFocus
+                className="flex-1 rounded-md border border-input bg-card px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              />
+              <Button type="submit" size="icon" disabled={busy || !input.trim()} aria-label="Send message">
+                <Send className="size-4" />
+              </Button>
+            </form>
           </div>
-
-          {quickReplies.length > 0 && !busy && (
-            <div className="flex flex-wrap gap-1.5 border-t border-border p-2">
-              {quickReplies.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => handleQuickReply(r)}
-                  className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs text-primary hover:bg-primary/10"
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void handleSend();
-            }}
-            className="flex items-center gap-2 border-t border-border p-2"
-          >
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={busy}
-              placeholder="Type a message..."
-              className="flex-1 rounded-md border border-input bg-card px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-            />
-            <Button type="submit" size="icon" disabled={busy || !input.trim()} aria-label="Send message">
-              <Send className="size-4" />
-            </Button>
-          </form>
         </div>
       )}
 
-      <Button size="icon" className="size-12 rounded-full shadow-lg" onClick={toggleOpen} aria-label={open ? "Close chat" : "Open chat"}>
-        {open ? <X className="size-5" /> : <MessageCircle className="size-5" />}
-      </Button>
-    </div>
+      <div className="fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
+        <Button size="icon" className="size-12 rounded-full shadow-lg" onClick={toggleOpen} aria-label={open ? "Close chat" : "Open chat"}>
+          {open ? <X className="size-5" /> : <MessageCircle className="size-5" />}
+        </Button>
+      </div>
+    </>
   );
 }
