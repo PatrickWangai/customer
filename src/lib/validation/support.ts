@@ -52,6 +52,8 @@ export interface TrackedRequest {
   category: string;
   priority: string;
   status: string;
+  stage: 1 | 2 | 3;
+  stageLabel: string;
   createdAt: string;
 }
 

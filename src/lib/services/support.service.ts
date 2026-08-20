@@ -2,7 +2,8 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { RequestPriority } from "@prisma/client";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
-import { forwardToCrm } from "@/lib/services/crm-bridge";
+import { forwardToCrm, pullCrmStatus } from "@/lib/services/crm-bridge";
+import { getSupportStage } from "@/lib/support-stage";
 import type { SupportRequestInput, TrackedRequest } from "@/lib/validation/support";
 
 async function nextReferenceNumber(): Promise<string> {
@@ -78,12 +79,20 @@ export async function trackSupportRequest(referenceNumber: string, email: string
     return null;
   }
 
+  // Prefer the CRM's live status when this request was forwarded — nothing
+  // ever updates the local `status` column after creation, so without this
+  // a customer would see "Submitted" forever regardless of real progress.
+  const live = record.crmTicketNumber ? await pullCrmStatus(record.crmTicketNumber) : null;
+  const { stage, label } = live ? { stage: live.stage, label: live.stageLabel } : getSupportStage(record.status);
+
   return {
     referenceNumber: record.referenceNumber,
     subject: record.subject,
     category: record.category,
     priority: record.priority,
-    status: record.status,
+    status: live?.status ?? record.status,
+    stage,
+    stageLabel: label,
     createdAt: record.createdAt.toISOString(),
   };
 }

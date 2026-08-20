@@ -67,3 +67,37 @@ export async function forwardToCrm(input: CrmBridgeInput): Promise<CrmBridgeResu
     return { ok: false, error: err instanceof Error ? err.message : "Network error calling CRM" };
   }
 }
+
+export interface CrmTicketStatus {
+  status: string;
+  stage: 1 | 2 | 3;
+  stageLabel: string;
+  businessUnitName: string | null;
+}
+
+/**
+ * Pulls the live status of a ticket this app already forwarded to the CRM
+ * (crmTicketNumber, stored at submission time), so tracking reflects real
+ * staff progress instead of the local SupportRequest.status, which nothing
+ * ever updates after creation. Returns null on any failure (CRM
+ * unreachable, not configured, ticket not found) — caller falls back to
+ * the local status.
+ */
+export async function pullCrmStatus(crmTicketNumber: string): Promise<CrmTicketStatus | null> {
+  const baseUrl = process.env.CRM_API_URL;
+  const apiKey = process.env.PUBLIC_API_KEY;
+  if (!baseUrl || !apiKey) return null;
+
+  try {
+    const res = await fetch(
+      `${baseUrl.replace(/\/$/, "")}/api/public/support-requests/status?ticketNumber=${encodeURIComponent(crmTicketNumber)}`,
+      { headers: { "x-api-key": apiKey }, signal: AbortSignal.timeout(5000) },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { status?: string; stage?: 1 | 2 | 3; stageLabel?: string; businessUnitName?: string | null };
+    if (!data.status || !data.stage || !data.stageLabel) return null;
+    return { status: data.status, stage: data.stage, stageLabel: data.stageLabel, businessUnitName: data.businessUnitName ?? null };
+  } catch {
+    return null;
+  }
+}

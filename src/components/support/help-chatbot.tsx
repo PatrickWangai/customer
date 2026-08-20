@@ -161,7 +161,7 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
         setBusy(false);
         if (result.ok) {
           bot(
-            `${result.result.subject}\nStatus: ${result.result.status.replace(/_/g, " ")} · Priority: ${result.result.priority}\nSubmitted ${new Date(result.result.createdAt).toLocaleString()}`,
+            `${result.result.subject}\nStage: ${result.result.stageLabel} (${result.result.stage}/3) · Priority: ${result.result.priority}\nSubmitted ${new Date(result.result.createdAt).toLocaleString()}`,
           );
         } else {
           bot("I couldn't find a request matching that reference number and email. Double-check them and try again, or use the Track tab above.");
