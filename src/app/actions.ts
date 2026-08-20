@@ -40,7 +40,14 @@ export async function submitSupportRequestAction(_prev: SupportFormState, formDa
 
   try {
     const result = await submitSupportRequest(parsed.data);
-    return { success: true, referenceNumber: result.referenceNumber, expectedResponseBy: result.expectedResponseBy.toISOString() };
+    return {
+      success: true,
+      referenceNumber: result.referenceNumber,
+      expectedResponseBy: result.expectedResponseBy.toISOString(),
+      contactEmail: result.contactEmail ?? undefined,
+      contactPhone: result.contactPhone ?? undefined,
+      tracking: result.tracking,
+    };
   } catch (err) {
     return { error: friendlyError(err) };
   }

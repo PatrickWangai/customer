@@ -31,21 +31,6 @@ export const supportRequestSchema = z
 
 export type SupportRequestInput = z.infer<typeof supportRequestSchema>;
 
-export interface SupportFormState {
-  error?: string;
-  fieldErrors?: Record<string, string[]>;
-  success?: boolean;
-  referenceNumber?: string;
-  expectedResponseBy?: string;
-}
-
-export const trackRequestSchema = z.object({
-  referenceNumber: z.string().trim().min(1, "Enter your reference number"),
-  email: z.string().trim().toLowerCase().email("Enter the email you used when submitting"),
-});
-
-export type TrackRequestInput = z.infer<typeof trackRequestSchema>;
-
 export interface TrackedRequest {
   referenceNumber: string;
   subject: string;
@@ -57,6 +42,25 @@ export interface TrackedRequest {
   createdAt: string;
   expectedResponseBy: string | null;
 }
+
+export interface SupportFormState {
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+  success?: boolean;
+  referenceNumber?: string;
+  expectedResponseBy?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  /** Live tracking snapshot for the just-created request, so the submitter sees real status immediately without re-entering their reference number and email. */
+  tracking?: TrackedRequest;
+}
+
+export const trackRequestSchema = z.object({
+  referenceNumber: z.string().trim().min(1, "Enter your reference number"),
+  email: z.string().trim().toLowerCase().email("Enter the email you used when submitting"),
+});
+
+export type TrackRequestInput = z.infer<typeof trackRequestSchema>;
 
 export interface TrackRequestFormState {
   error?: string;

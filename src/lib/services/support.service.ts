@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
-import type { RequestPriority } from "@prisma/client";
+import type { RequestPriority, SupportRequest } from "@prisma/client";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
 import { forwardToCrm, pullCrmStatus } from "@/lib/services/crm-bridge";
 import { getSupportStage } from "@/lib/support-stage";
@@ -18,9 +18,37 @@ function cleanStr(v?: string | null): string | null {
   return v && v.length > 0 ? v : null;
 }
 
+/**
+ * Shared by the email-gated lookup (trackSupportRequest) and the
+ * just-submitted case (submitSupportRequest, which already has legitimate
+ * access to the record it just created and doesn't need the email check).
+ * Prefers the CRM's live status when the request was forwarded — nothing
+ * ever updates the local `status` column after creation, so without this a
+ * submitter would see "Submitted" forever regardless of real progress.
+ */
+async function buildTrackedRequest(record: SupportRequest): Promise<TrackedRequest> {
+  const live = record.crmTicketNumber ? await pullCrmStatus(record.crmTicketNumber) : null;
+  const { stage, label } = live ? { stage: live.stage, label: live.stageLabel } : getSupportStage(record.status);
+
+  return {
+    referenceNumber: record.referenceNumber,
+    subject: record.subject,
+    category: record.category,
+    priority: record.priority,
+    status: live?.status ?? record.status,
+    stage,
+    stageLabel: label,
+    createdAt: record.createdAt.toISOString(),
+    expectedResponseBy: live?.expectedResponseBy ?? null,
+  };
+}
+
 export interface SubmitResult {
   referenceNumber: string;
   expectedResponseBy: Date;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  tracking: TrackedRequest;
 }
 
 /**
@@ -59,12 +87,18 @@ export async function submitSupportRequest(input: SupportRequestInput): Promise<
     subject: input.subject,
     description: input.description,
   });
-  await prisma.supportRequest.update({
+  const updated = await prisma.supportRequest.update({
     where: { id: record.id },
     data: bridgeResult.ok ? { crmTicketNumber: bridgeResult.ticketNumber } : { crmSyncError: bridgeResult.error },
   });
 
-  return { referenceNumber: record.referenceNumber, expectedResponseBy: new Date(Date.now() + ETA_HOURS[priority] * 60 * 60 * 1000) };
+  return {
+    referenceNumber: record.referenceNumber,
+    expectedResponseBy: new Date(Date.now() + ETA_HOURS[priority] * 60 * 60 * 1000),
+    contactEmail: cleanStr(input.email),
+    contactPhone: cleanStr(input.phone),
+    tracking: await buildTrackedRequest(updated),
+  };
 }
 
 /**
@@ -78,22 +112,5 @@ export async function trackSupportRequest(referenceNumber: string, email: string
   if (!record || !record.email || record.email.toLowerCase() !== email.toLowerCase()) {
     return null;
   }
-
-  // Prefer the CRM's live status when this request was forwarded — nothing
-  // ever updates the local `status` column after creation, so without this
-  // a customer would see "Submitted" forever regardless of real progress.
-  const live = record.crmTicketNumber ? await pullCrmStatus(record.crmTicketNumber) : null;
-  const { stage, label } = live ? { stage: live.stage, label: live.stageLabel } : getSupportStage(record.status);
-
-  return {
-    referenceNumber: record.referenceNumber,
-    subject: record.subject,
-    category: record.category,
-    priority: record.priority,
-    status: live?.status ?? record.status,
-    stage,
-    stageLabel: label,
-    createdAt: record.createdAt.toISOString(),
-    expectedResponseBy: live?.expectedResponseBy ?? null,
-  };
+  return buildTrackedRequest(record);
 }
