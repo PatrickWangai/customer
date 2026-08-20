@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Mail, Clock, ShieldCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PublicSupportForm } from "@/components/support/public-support-form";
 import { TrackRequestForm } from "@/components/support/track-request-form";
@@ -30,12 +29,6 @@ export default function HelpAndSupportPage() {
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <InfoCard icon={Mail} label="Email us" value={supportEmail} />
-          <InfoCard icon={Clock} label="Response times" value="Vary by priority — you'll see an estimate after submitting" />
-          <InfoCard icon={ShieldCheck} label="Your data" value="Only used to follow up on this request" />
-        </div>
-
         <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
           <Tabs defaultValue="submit">
             <TabsList>
@@ -53,17 +46,6 @@ export default function HelpAndSupportPage() {
       </main>
 
       <HelpChatbot supportEmail={supportEmail} />
-    </div>
-  );
-}
-
-function InfoCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        <Icon className="size-3.5" /> {label}
-      </div>
-      <p className="mt-1.5 text-sm">{value}</p>
     </div>
   );
 }
