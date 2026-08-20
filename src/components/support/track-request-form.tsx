@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
+import { SupportStageStepper } from "@/components/support/support-stage-stepper";
 import { trackSupportRequestAction } from "@/app/actions";
 import type { TrackRequestFormState } from "@/lib/validation/support";
 
@@ -49,11 +50,13 @@ export function TrackRequestForm() {
                 {state.result.referenceNumber} &middot; {state.result.category}
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <StatusBadge status={state.result.priority} />
-              <StatusBadge status={state.result.status} />
-            </div>
+            <StatusBadge status={state.result.priority} />
           </div>
+
+          <div className="mt-4 mb-1">
+            <SupportStageStepper stage={state.result.stage} activeLabel={state.result.stageLabel} />
+          </div>
+
           <p className="mt-3 text-xs text-muted-foreground">Submitted {new Date(state.result.createdAt).toLocaleString()}</p>
         </div>
       )}
