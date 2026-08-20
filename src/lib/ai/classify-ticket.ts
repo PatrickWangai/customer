@@ -9,6 +9,8 @@ const HIGH_KEYWORDS = ["leak", "broken", "not working", "urgent", "asap", "overf
 const CATEGORY_KEYWORDS: { category: string; keywords: string[] }[] = [
   { category: "Maintenance Request", keywords: ["leak", "broken", "repair", "fix", "plumbing", "electrical", "faulty", "not working", "maintenance"] },
   { category: "Billing Inquiry", keywords: ["invoice", "bill", "payment", "charge", "refund", "receipt", "overcharged"] },
+  { category: "Sales & Marketing", keywords: ["buy", "purchase", "interested in", "available units", "price list", "book a viewing", "join the sacco", "membership", "insurance quote", "new customer"] },
+  { category: "HR & Administration", keywords: ["job", "career", "vacancy", "recruitment", "employment", "internship", "apply for a job", "cv", "resume"] },
   { category: "Complaint", keywords: ["complain", "unhappy", "unacceptable", "rude", "disappointed", "noise", "neighbor"] },
   { category: "Service Request", keywords: ["request", "need", "install", "upgrade", "access card", "parking"] },
   { category: "Technical Support", keywords: ["app", "login", "portal", "website", "password", "system"] },
