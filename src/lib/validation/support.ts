@@ -3,19 +3,7 @@ import { z } from "zod";
 // Must match the CRM's TICKET_CATEGORIES exactly, string for string — these
 // cross the server-to-server bridge as plain strings and are validated
 // there against its own enum (see the CRM's publicSupportRequestSchema).
-export const REQUEST_CATEGORIES = [
-  "Billing Inquiry",
-  "Maintenance Request",
-  "Sales & Marketing",
-  "HR & Administration",
-  "Complaint",
-  "General Inquiry",
-  "Service Request",
-  "Technical Support",
-  "Account Update",
-  "Other",
-  "Don't Know",
-] as const;
+export const REQUEST_CATEGORIES = ["Finance", "Property Management", "Sales & Marketing", "HR & Administration", "Technical Support", "Complaint", "Customer Care", "Don't Know"] as const;
 
 export const BUSINESS_UNITS = ["Real Estate", "SACCO", "Insurance", "Housing", "General / not sure"] as const;
 
