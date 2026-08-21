@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PublicSupportForm } from "@/components/support/public-support-form";
 import { TrackRequestForm } from "@/components/support/track-request-form";
 import { HelpChatbot } from "@/components/support/help-chatbot";
+import { PresenceTracker } from "@/components/support/presence-tracker";
 
 export default async function HelpAndSupportPage({
   searchParams,
@@ -57,6 +58,7 @@ export default async function HelpAndSupportPage({
       </main>
 
       <HelpChatbot supportEmail={supportEmail} />
+      <PresenceTracker ticketNumber={initialTicketNumber} />
     </div>
   );
 }
