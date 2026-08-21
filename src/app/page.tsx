@@ -4,6 +4,7 @@ import { PublicSupportForm } from "@/components/support/public-support-form";
 import { TrackRequestForm } from "@/components/support/track-request-form";
 import { HelpChatbot } from "@/components/support/help-chatbot";
 import { PresenceTracker } from "@/components/support/presence-tracker";
+import { VisitorChatWidget } from "@/components/support/visitor-chat-widget";
 
 export default async function HelpAndSupportPage({
   searchParams,
@@ -59,6 +60,7 @@ export default async function HelpAndSupportPage({
 
       <HelpChatbot supportEmail={supportEmail} />
       <PresenceTracker ticketNumber={initialTicketNumber} />
+      <VisitorChatWidget apiBase={process.env.NEXT_PUBLIC_CRM_URL ?? ""} />
     </div>
   );
 }
