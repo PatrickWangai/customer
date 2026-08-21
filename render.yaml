@@ -28,3 +28,9 @@ services:
         value: https://masterways-crm.onrender.com
       - key: PUBLIC_API_KEY
         value: 7ff32f1144d2c129a717f4c33919b46dded463dd5a4e17ed12bc8402683f80f9
+      # Same URL as CRM_API_URL above, but NEXT_PUBLIC_-prefixed so the
+      # browser (not just this server) can reach it directly — needed for
+      # the live-visitor presence beacon (presence-tracker.tsx), which fires
+      # straight from the visitor's browser, not through this app's server.
+      - key: NEXT_PUBLIC_CRM_URL
+        value: https://masterways-crm.onrender.com
