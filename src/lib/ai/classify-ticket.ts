@@ -7,14 +7,13 @@ export interface TicketClassification {
 const URGENT_KEYWORDS = ["flood", "fire", "gas leak", "no water", "no power", "break-in", "burglary", "emergency", "electric shock", "collapsed"];
 const HIGH_KEYWORDS = ["leak", "broken", "not working", "urgent", "asap", "overflowing", "no access", "locked out", "burst"];
 const CATEGORY_KEYWORDS: { category: string; keywords: string[] }[] = [
-  { category: "Maintenance Request", keywords: ["leak", "broken", "repair", "fix", "plumbing", "electrical", "faulty", "not working", "maintenance"] },
-  { category: "Billing Inquiry", keywords: ["invoice", "bill", "payment", "charge", "refund", "receipt", "overcharged"] },
+  { category: "Property Management", keywords: ["leak", "broken", "repair", "fix", "plumbing", "electrical", "faulty", "not working", "maintenance"] },
+  { category: "Finance", keywords: ["invoice", "bill", "payment", "charge", "refund", "receipt", "overcharged"] },
   { category: "Sales & Marketing", keywords: ["buy", "purchase", "interested in", "available units", "price list", "book a viewing", "join the sacco", "membership", "insurance quote", "new customer"] },
   { category: "HR & Administration", keywords: ["job", "career", "vacancy", "recruitment", "employment", "internship", "apply for a job", "cv", "resume"] },
   { category: "Complaint", keywords: ["complain", "unhappy", "unacceptable", "rude", "disappointed", "noise", "neighbor"] },
-  { category: "Service Request", keywords: ["request", "need", "install", "upgrade", "access card", "parking"] },
   { category: "Technical Support", keywords: ["app", "login", "portal", "website", "password", "system"] },
-  { category: "Account Update", keywords: ["update my", "change my", "contact details", "move out", "vacate"] },
+  { category: "Customer Care", keywords: ["request", "need", "install", "upgrade", "access card", "parking", "update my", "change my", "contact details", "move out", "vacate"] },
 ];
 
 /**
@@ -36,7 +35,7 @@ export function classifyTicket(subject: string, description: string): TicketClas
     matchedKeyword = HIGH_KEYWORDS.find((k) => text.includes(k)) ?? null;
   }
 
-  let category = "General Inquiry";
+  let category = "Customer Care";
   for (const entry of CATEGORY_KEYWORDS) {
     if (entry.keywords.some((k) => text.includes(k))) {
       category = entry.category;
