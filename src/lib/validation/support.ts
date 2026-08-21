@@ -14,6 +14,7 @@ export const REQUEST_CATEGORIES = [
   "Technical Support",
   "Account Update",
   "Other",
+  "Don't Know",
 ] as const;
 
 export const BUSINESS_UNITS = ["Real Estate", "SACCO", "Insurance", "Housing", "General / not sure"] as const;
@@ -40,12 +41,15 @@ export interface TrackedRequest {
   referenceNumber: string;
   subject: string;
   category: string;
-  priority: string;
+  // Deliberately no `priority` — internal triage detail, only depts should
+  // see it (matches the CRM's own PublicTicketStatus).
   status: string;
   stage: 1 | 2 | 3;
   stageLabel: string;
   createdAt: string;
   expectedResponseBy: string | null;
+  /** The CRM's own ticket number (different from referenceNumber above), once bridging succeeds — needed to talk to the CRM's live-chat API, which only knows tickets by this number. Null until/unless the bridge call succeeded. */
+  crmTicketNumber: string | null;
 }
 
 export interface SupportFormState {
@@ -71,4 +75,12 @@ export interface TrackRequestFormState {
   error?: string;
   result?: TrackedRequest;
   email?: string;
+}
+
+/** Mirrors the CRM's own LiveChatMessage — the shape returned by its /api/public/live-chat route, which this app's LiveChatThread calls directly cross-origin. */
+export interface LiveChatMessage {
+  id: string;
+  from: "customer" | "staff";
+  content: string;
+  occurredAt: string;
 }

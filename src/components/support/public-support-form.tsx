@@ -11,6 +11,7 @@ import { submitSupportRequestAction, chatTrackRequestAction } from "@/app/action
 import { REQUEST_CATEGORIES, BUSINESS_UNITS } from "@/lib/validation/support";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
 import { TrackingResultCard } from "@/components/support/tracking-result-card";
+import { PresenceTracker } from "@/components/support/presence-tracker";
 import type { SupportFormState, TrackedRequest } from "@/lib/validation/support";
 
 const initialState: SupportFormState = {};
@@ -154,6 +155,8 @@ export function PublicSupportForm() {
             refreshAction={chatTrackRequestAction}
             onRefresh={handleTrackingRefresh}
           />
+          {/* The page-level tracker only picks up a ticket number via a URL deep-link — a fresh submission here never navigates, so without this the CRM's Live Activity "Chat" button would have nothing to find. Uses the CRM's own ticket number, not this app's local referenceNumber — the CRM only knows tickets by that. */}
+          {activeResult.tracking.crmTicketNumber && <PresenceTracker ticketNumber={activeResult.tracking.crmTicketNumber} />}
           <Button variant="outline" className="w-full sm:w-auto" onClick={startNewRequest}>
             Submit another request
           </Button>

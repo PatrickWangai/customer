@@ -34,12 +34,12 @@ async function buildTrackedRequest(record: SupportRequest): Promise<TrackedReque
     referenceNumber: record.referenceNumber,
     subject: record.subject,
     category: record.category,
-    priority: record.priority,
     status: live?.status ?? record.status,
     stage,
     stageLabel: label,
     createdAt: record.createdAt.toISOString(),
     expectedResponseBy: live?.expectedResponseBy ?? null,
+    crmTicketNumber: record.crmTicketNumber,
   };
 }
 

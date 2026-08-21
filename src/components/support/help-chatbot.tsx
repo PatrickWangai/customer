@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
 import { REQUEST_CATEGORIES } from "@/lib/validation/support";
 import { chatSubmitRequestAction, chatTrackRequestAction } from "@/app/actions";
+import { isWithinSupportHours, closedHoursMessage } from "@/lib/support-hours";
 
 type Stage =
   | "greeting"
@@ -27,8 +28,11 @@ interface Message {
 
 let nextId = 1;
 
+const INVITE_DISMISSED_KEY = "mw_help_chat_invite_dismissed";
+
 export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
   const [open, setOpen] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [stage, setStage] = useState<Stage>("greeting");
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
@@ -38,9 +42,24 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
 
   const draft = useRef<{ description?: string; category?: string; firstName?: string; lastName?: string; email?: string; phone?: string; referenceNumber?: string }>({});
 
+  useEffect(() => {
+    if (localStorage.getItem(INVITE_DISMISSED_KEY)) return;
+    const timer = setTimeout(() => setShowInvite(true), 4_000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  function dismissInvite() {
+    setShowInvite(false);
+    localStorage.setItem(INVITE_DISMISSED_KEY, "1");
+  }
+
   function toggleOpen() {
+    dismissInvite();
     const next = !open;
     if (next && messages.length === 0) {
+      if (!isWithinSupportHours()) {
+        bot(closedHoursMessage());
+      }
       bot("Hi! I'm the Masterways virtual assistant. How can I help?", ["File a complaint", "Track my request", "Contact & hours"]);
       setStage("greeting");
     }
@@ -170,7 +189,7 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
         setBusy(false);
         if (result.ok) {
           bot(
-            `${result.result.subject}\nStage: ${result.result.stageLabel} (${result.result.stage}/3) · Priority: ${result.result.priority}\nSubmitted ${new Date(result.result.createdAt).toLocaleString()}`,
+            `${result.result.subject}\nStage: ${result.result.stageLabel} (${result.result.stage}/3)\nSubmitted ${new Date(result.result.createdAt).toLocaleString()}`,
           );
         } else {
           bot("I couldn't find a request matching that reference number and email. Double-check them and try again, or use the Track tab above.");
@@ -311,6 +330,15 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
               </Button>
             </form>
           </div>
+        </div>
+      )}
+
+      {showInvite && !open && (
+        <div className="fixed bottom-20 right-4 z-40 flex max-w-[calc(100vw-2rem)] items-start gap-2 rounded-lg border border-border bg-card p-3 shadow-lg sm:bottom-24 sm:right-6 sm:max-w-64">
+          <p className="text-sm">Need help? You can chat with our virtual assistant anytime.</p>
+          <button onClick={dismissInvite} className="shrink-0 rounded-md p-0.5 text-muted-foreground hover:bg-secondary" aria-label="Dismiss">
+            <X className="size-3.5" />
+          </button>
         </div>
       )}
 
