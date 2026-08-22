@@ -5,7 +5,11 @@ import { z } from "zod";
 // there against its own enum (see the CRM's publicSupportRequestSchema).
 export const REQUEST_CATEGORIES = ["Finance", "Property Management", "Sales & Marketing", "HR & Administration", "Technical Support", "Complaint", "Customer Care", "Don't Know"] as const;
 
-export const BUSINESS_UNITS = ["Real Estate", "SACCO", "Insurance", "Housing", "General / not sure"] as const;
+/** A business unit as fetched live from the CRM's /api/public/business-units — see crm-bridge.ts's fetchCrmBusinessUnits. Business units are admin-creatable/deletable in the CRM, so this list is never hardcoded here. */
+export interface PublicBusinessUnit {
+  code: string;
+  name: string;
+}
 
 export const supportRequestSchema = z
   .object({

@@ -1,18 +1,12 @@
 import "server-only";
-
-const BUSINESS_UNIT_CODE_MAP: Record<string, string> = {
-  "Real Estate": "MRE",
-  SACCO: "MSL",
-  Insurance: "MIA",
-  Housing: "MHL",
-  "General / not sure": "MGC",
-};
+import type { PublicBusinessUnit } from "@/lib/validation/support";
 
 export interface CrmBridgeInput {
   firstName: string;
   lastName: string;
   email?: string | null;
   phone?: string | null;
+  /** A BusinessUnit.code from the CRM's live list (fetchCrmBusinessUnits below) — passed straight through as businessUnitCode, no label translation. */
   businessUnit?: string | null;
   category: string;
   subject: string;
@@ -47,7 +41,7 @@ export async function forwardToCrm(input: CrmBridgeInput): Promise<CrmBridgeResu
         lastName: input.lastName,
         email: input.email || undefined,
         phone: input.phone || undefined,
-        businessUnitCode: input.businessUnit ? BUSINESS_UNIT_CODE_MAP[input.businessUnit] : undefined,
+        businessUnitCode: input.businessUnit || undefined,
         category: input.category,
         subject: input.subject,
         description: input.description,
@@ -112,5 +106,33 @@ export async function pullCrmStatus(crmTicketNumber: string): Promise<CrmTicketS
     };
   } catch {
     return null;
+  }
+}
+
+/**
+ * Live business-unit list for the "Which service is this about?" picker on
+ * the public form — fetched from the CRM instead of hardcoded, since
+ * business units are admin-creatable/deletable there (see the CRM's
+ * /admin/business-units) and this app has no database of its own to keep
+ * that in sync. Returns [] on any failure (not configured, unreachable,
+ * bad response) rather than throwing — the picker just falls back to a
+ * single "General / not sure" option, never blocking submission.
+ */
+export async function fetchCrmBusinessUnits(): Promise<PublicBusinessUnit[]> {
+  const baseUrl = process.env.CRM_API_URL;
+  const apiKey = process.env.PUBLIC_API_KEY;
+  if (!baseUrl || !apiKey) return [];
+
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/public/business-units`, {
+      headers: { "x-api-key": apiKey },
+      signal: AbortSignal.timeout(5000),
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { businessUnits?: { code: string; name: string }[] };
+    return data.businessUnits ?? [];
+  } catch {
+    return [];
   }
 }
