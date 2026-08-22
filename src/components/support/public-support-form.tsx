@@ -8,16 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { submitSupportRequestAction, chatTrackRequestAction } from "@/app/actions";
-import { REQUEST_CATEGORIES, BUSINESS_UNITS } from "@/lib/validation/support";
+import { REQUEST_CATEGORIES } from "@/lib/validation/support";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
 import { TrackingResultCard } from "@/components/support/tracking-result-card";
 import { PresenceTracker } from "@/components/support/presence-tracker";
-import type { SupportFormState, TrackedRequest } from "@/lib/validation/support";
+import type { PublicBusinessUnit, SupportFormState, TrackedRequest } from "@/lib/validation/support";
 
 const initialState: SupportFormState = {};
 
 /** Survives navigating away and back (or a refresh) within the same tab — cleared when the tab closes. Just this submitter's own data on their own device. */
 const STORAGE_KEY = "masterways-help-last-request";
+
+/** Radix Select needs a non-empty value for every item — this stands in for businessUnit="" ("General / not sure"). */
+const GENERAL_BUSINESS_UNIT = "__general__";
 
 interface StoredResult {
   referenceNumber: string;
@@ -42,7 +45,7 @@ function SubmitButton() {
   );
 }
 
-export function PublicSupportForm() {
+export function PublicSupportForm({ businessUnits }: { businessUnits: PublicBusinessUnit[] }) {
   const [state, formAction] = useActionState(submitSupportRequestAction, initialState);
   const [businessUnit, setBusinessUnit] = useState("");
   const [category, setCategory] = useState<string>("Don't Know");
@@ -204,14 +207,15 @@ export function PublicSupportForm() {
       <div className="space-y-1.5">
         <Label htmlFor="businessUnit">Which service is this about?</Label>
         <input type="hidden" name="businessUnit" value={businessUnit} />
-        <Select value={businessUnit} onValueChange={setBusinessUnit}>
+        <Select value={businessUnit || GENERAL_BUSINESS_UNIT} onValueChange={(v) => setBusinessUnit(v === GENERAL_BUSINESS_UNIT ? "" : v)}>
           <SelectTrigger id="businessUnit">
             <SelectValue placeholder="Not sure / general" />
           </SelectTrigger>
           <SelectContent>
-            {BUSINESS_UNITS.map((bu) => (
-              <SelectItem key={bu} value={bu}>
-                {bu}
+            <SelectItem value={GENERAL_BUSINESS_UNIT}>Not sure / general</SelectItem>
+            {businessUnits.map((bu) => (
+              <SelectItem key={bu.code} value={bu.code}>
+                {bu.name}
               </SelectItem>
             ))}
           </SelectContent>
