@@ -3,11 +3,14 @@
 import {
   supportRequestSchema,
   trackRequestSchema,
+  REQUEST_CATEGORIES,
   type SupportFormState,
   type TrackRequestFormState,
 } from "@/lib/validation/support";
 import { submitSupportRequest, trackSupportRequest } from "@/lib/services/support.service";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { generateGeminiReply } from "@/lib/ai/gemini";
+import { formatSupportHours, isWithinSupportHours } from "@/lib/support-hours";
 
 function friendlyError(err: unknown): string {
   return err instanceof Error ? err.message : "Something went wrong. Please try again.";
@@ -127,4 +130,30 @@ export async function chatTrackRequestAction(referenceNumber: string, email: str
   const result = await trackSupportRequest(parsed.data.referenceNumber, parsed.data.email);
   if (!result) return { ok: false };
   return { ok: true, result };
+}
+
+export type ChatAskResult = { ok: true; text: string } | { ok: false };
+
+const ASK_SYSTEM_PROMPT = `You are the Masterways virtual assistant, on the public Help & Support website for Masterways Group of Companies (Real Estate, SACCO, Insurance and Housing).
+
+You have no access to any specific customer's account, ticket, or personal data — never invent a ticket status, balance, or timeline. If someone asks about THEIR OWN specific request, tell them to use "Track my request" (needs their reference number + email) instead of answering directly.
+
+If someone wants to report a problem or file a complaint, tell them to use "File a complaint" instead of describing it to you directly.
+
+Facts you can share:
+- Support hours: ${formatSupportHours()} (Africa/Nairobi time). Currently ${isWithinSupportHours() ? "open" : "closed"}.
+- Request categories: ${REQUEST_CATEGORIES.join(", ")}.
+- Submitting a request creates a real ticket with an estimated response time shown immediately; it can be tracked anytime with the reference number + the email used.
+
+Keep replies under 3 sentences, plain text (no markdown), friendly and concise.`;
+
+/** Free-form Q&A fallback for the "Ask a question" path — grounded in real support-hours/category facts, explicitly barred from inventing account-specific details. Falls back to a plain message if Gemini is unavailable. */
+export async function chatAskAction(question: string): Promise<ChatAskResult> {
+  if (!checkRateLimit("chat-ask", await getClientIp(), 20)) {
+    return { ok: false };
+  }
+
+  const text = await generateGeminiReply(ASK_SYSTEM_PROMPT, question);
+  if (!text) return { ok: false };
+  return { ok: true, text };
 }

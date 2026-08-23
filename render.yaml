@@ -34,3 +34,10 @@ services:
       # straight from the visitor's browser, not through this app's server.
       - key: NEXT_PUBLIC_CRM_URL
         value: https://masterways-crm.onrender.com
+      # Google Gemini free tier — powers the "Ask a question" path in the
+      # public chatbot. Without it, that button still shows but falls back
+      # to "I'm not able to answer that right now". Same key as the CRM's
+      # own GEMINI_API_KEY (one Google account, reused). Get one (no card
+      # required) at aistudio.google.com/apikey.
+      - key: GEMINI_API_KEY
+        sync: false

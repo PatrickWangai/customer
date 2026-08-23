@@ -5,7 +5,7 @@ import { MessageCircle, X, Send, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
 import { REQUEST_CATEGORIES } from "@/lib/validation/support";
-import { chatSubmitRequestAction, chatTrackRequestAction } from "@/app/actions";
+import { chatSubmitRequestAction, chatTrackRequestAction, chatAskAction } from "@/app/actions";
 import { isWithinSupportHours, closedHoursMessage } from "@/lib/support-hours";
 import { OPEN_LIVE_CHAT_EVENT } from "@/lib/live-chat-events";
 
@@ -19,6 +19,7 @@ type Stage =
   | "track_number"
   | "track_email"
   | "track_submitting"
+  | "ask_question"
   | "idle";
 
 interface Message {
@@ -61,7 +62,7 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
       if (!isWithinSupportHours()) {
         bot(closedHoursMessage());
       }
-      bot("Hi! I'm the Masterways virtual assistant. How can I help?", ["File a complaint", "Track my request", "Chat with our team", "Contact & hours"]);
+      bot("Hi! I'm the Masterways virtual assistant. How can I help?", ["File a complaint", "Track my request", "Ask a question", "Chat with our team", "Contact & hours"]);
       setStage("greeting");
     }
     setOpen(next);
@@ -202,6 +203,21 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
         return;
       }
 
+      case "ask_question": {
+        setBusy(true);
+        const result = await chatAskAction(text);
+        setBusy(false);
+        if (result.ok) {
+          bot(result.text, ["Ask another question", "File a complaint", "Track my request"]);
+        } else {
+          bot("I'm not able to answer that right now — try File a complaint or Track my request instead, or email us directly.", [
+            "File a complaint",
+            "Track my request",
+          ]);
+        }
+        return;
+      }
+
       default:
         return;
     }
@@ -235,6 +251,12 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
       user(reply);
       bot("Sure — what's your reference number? (e.g. REQ-000123)");
       setStage("track_number");
+      return;
+    }
+    if (reply === "Ask a question" || reply === "Ask another question") {
+      user(reply);
+      bot("Sure — what would you like to know?");
+      setStage("ask_question");
       return;
     }
     if (reply === "Contact & hours") {
@@ -277,7 +299,7 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
                 <Sparkles className="size-4 text-primary" />
                 <div>
                   <p className="text-sm font-semibold">Masterways Assistant</p>
-                  <p className="text-[10px] text-muted-foreground">Rule-based assistant — not a live AI model</p>
+                  <p className="text-[10px] text-muted-foreground">Filing/tracking is a guided flow — &quot;Ask a question&quot; is AI-assisted</p>
                 </div>
               </div>
               <button onClick={() => setOpen(false)} className="rounded-md p-1 text-muted-foreground hover:bg-secondary" aria-label="Close chat">
