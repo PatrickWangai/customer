@@ -1,6 +1,10 @@
 import "server-only";
 
-const MODEL = "gemini-3.6-flash";
+// Not gemini-3.6-flash: verified live that its free tier caps at 20
+// requests/DAY (a 429 RESOURCE_EXHAUSTED confirmed this directly) — nowhere
+// near enough for a public-facing chatbot. flash-lite is a separate quota
+// bucket with real headroom, same request shape, no thinking-token overhead.
+const MODEL = "gemini-flash-lite-latest";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 /**
