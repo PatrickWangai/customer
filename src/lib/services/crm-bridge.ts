@@ -136,3 +136,35 @@ export async function fetchCrmBusinessUnits(): Promise<PublicBusinessUnit[]> {
     return [];
   }
 }
+
+export interface CrmKnowledgeArticle {
+  id: string;
+  title: string;
+  category: string;
+  body: string;
+}
+
+/**
+ * Live, published knowledge-base articles for this app's FAQ tab — fetched
+ * from the CRM (see /admin/knowledge-base there) rather than duplicated
+ * here, same reasoning as fetchCrmBusinessUnits above. Returns [] on any
+ * failure rather than throwing — the FAQ tab just renders empty.
+ */
+export async function fetchCrmKnowledgeArticles(): Promise<CrmKnowledgeArticle[]> {
+  const baseUrl = process.env.CRM_API_URL;
+  const apiKey = process.env.PUBLIC_API_KEY;
+  if (!baseUrl || !apiKey) return [];
+
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/public/knowledge-articles`, {
+      headers: { "x-api-key": apiKey },
+      signal: AbortSignal.timeout(5000),
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { articles?: CrmKnowledgeArticle[] };
+    return data.articles ?? [];
+  } catch {
+    return [];
+  }
+}

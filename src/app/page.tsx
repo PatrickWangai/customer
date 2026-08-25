@@ -2,10 +2,11 @@ import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PublicSupportForm } from "@/components/support/public-support-form";
 import { TrackRequestForm } from "@/components/support/track-request-form";
+import { FaqList } from "@/components/support/faq-list";
 import { HelpChatbot } from "@/components/support/help-chatbot";
 import { PresenceTracker } from "@/components/support/presence-tracker";
 import { VisitorChatWidget } from "@/components/support/visitor-chat-widget";
-import { fetchCrmBusinessUnits } from "@/lib/services/crm-bridge";
+import { fetchCrmBusinessUnits, fetchCrmKnowledgeArticles } from "@/lib/services/crm-bridge";
 
 export default async function HelpAndSupportPage({
   searchParams,
@@ -13,7 +14,7 @@ export default async function HelpAndSupportPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const supportEmail = process.env.SUPPORT_EMAIL || "support@masterways.co.ke";
-  const [sp, businessUnits] = await Promise.all([searchParams, fetchCrmBusinessUnits()]);
+  const [sp, businessUnits, articles] = await Promise.all([searchParams, fetchCrmBusinessUnits(), fetchCrmKnowledgeArticles()]);
 
   // Lets a "Track your request live" link deep-link straight into "already
   // looked up" — mirrors the same param handling in the CRM repo's /help page.
@@ -48,12 +49,16 @@ export default async function HelpAndSupportPage({
             <TabsList>
               <TabsTrigger value="submit">Submit a request</TabsTrigger>
               <TabsTrigger value="track">Track a request</TabsTrigger>
+              <TabsTrigger value="faqs">FAQs</TabsTrigger>
             </TabsList>
             <TabsContent value="submit" className="pt-4">
               <PublicSupportForm businessUnits={businessUnits} />
             </TabsContent>
             <TabsContent value="track" className="pt-4">
               <TrackRequestForm defaultTicketNumber={initialTicketNumber} defaultEmail={initialEmail} />
+            </TabsContent>
+            <TabsContent value="faqs" className="pt-4">
+              <FaqList articles={articles} />
             </TabsContent>
           </Tabs>
         </div>
