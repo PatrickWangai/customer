@@ -27,7 +27,7 @@ export default async function HelpAndSupportPage({
       <header className="border-b border-border bg-card px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-md border border-border bg-white p-1">
-            <Image src="/logo.jpeg" alt="Masterways" width={32} height={32} className="size-full object-contain" />
+            <Image src="/logo.png" alt="Masterways" width={32} height={32} className="size-full object-contain" />
           </div>
           <div className="leading-tight">
             <p className="text-sm font-semibold">Masterways Group of Companies</p>

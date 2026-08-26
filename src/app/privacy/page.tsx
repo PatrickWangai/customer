@@ -14,7 +14,7 @@ export default function PrivacyNoticePage() {
         <div className="mx-auto flex max-w-2xl items-center gap-2.5">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex size-8 items-center justify-center rounded-md border border-border bg-white p-1">
-              <Image src="/logo.jpeg" alt={COMPANY_NAME} width={32} height={32} className="size-full object-contain" />
+              <Image src="/logo.png" alt={COMPANY_NAME} width={32} height={32} className="size-full object-contain" />
             </div>
             <p className="text-sm font-semibold">{COMPANY_NAME}</p>
           </Link>
