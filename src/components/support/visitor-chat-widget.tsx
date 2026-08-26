@@ -13,6 +13,7 @@ interface VisitorMessage {
   from: "customer" | "staff";
   content: string;
   occurredAt: string;
+  staffName?: string;
 }
 
 /**
@@ -125,14 +126,30 @@ export function VisitorChatWidget({ apiBase }: { apiBase: string }) {
         </div>
       </div>
       <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto p-3">
-        {messages.length === 0 && <p className="text-sm text-muted-foreground">Type a message below to start chatting with our team.</p>}
-        {messages.map((m) => (
-          <div key={m.id} className={`flex ${m.from === "customer" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-1.5 text-sm ${m.from === "customer" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
-              {m.content}
+        {messages.length === 0 && (
+          <p className="rounded-md bg-secondary/50 px-3 py-2 text-center text-xs text-muted-foreground">
+            You&apos;re connected with our support team. We typically reply within a few minutes — type a message below to get started.
+          </p>
+        )}
+        {messages.map((m, idx) => {
+          const isFirstStaffMessage = m.from === "staff" && messages.slice(0, idx).every((prev) => prev.from !== "staff");
+          const seen = m.from === "customer" && messages.slice(idx + 1).some((next) => next.from === "staff");
+          return (
+            <div key={m.id}>
+              {isFirstStaffMessage && (
+                <p className="mb-2 text-center text-xs text-muted-foreground">
+                  {m.staffName ? `${m.staffName} joined the conversation` : "A team member joined the conversation"}
+                </p>
+              )}
+              <div className={`flex ${m.from === "customer" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-1.5 text-sm ${m.from === "customer" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
+                  {m.content}
+                </div>
+              </div>
+              {seen && <p className="mt-0.5 text-right text-[10px] text-muted-foreground">Seen</p>}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-border p-2">
         <input
