@@ -11,12 +11,18 @@ export interface PublicBusinessUnit {
   name: string;
 }
 
+// Must match the CRM's PREFERRED_CONTACT_METHODS exactly — crosses the
+// bridge as a plain string and is validated there too.
+export const PREFERRED_CONTACT_METHODS = ["EMAIL", "SMS", "WHATSAPP"] as const;
+export type PreferredContactMethod = (typeof PREFERRED_CONTACT_METHODS)[number];
+
 export const supportRequestSchema = z
   .object({
     firstName: z.string().trim().min(1, "First name is required").max(60),
     lastName: z.string().trim().min(1, "Last name is required").max(60),
     email: z.string().trim().toLowerCase().email("Enter a valid email").optional().or(z.literal("")),
     phone: z.string().trim().min(7, "Enter a valid phone number").max(20).optional().or(z.literal("")),
+    preferredContactMethod: z.enum(PREFERRED_CONTACT_METHODS).optional().or(z.literal("")),
     businessUnit: z.string().optional().or(z.literal("")),
     category: z.enum(REQUEST_CATEGORIES),
     subject: z.string().trim().min(1, "Subject is required").max(150),
@@ -25,6 +31,14 @@ export const supportRequestSchema = z
   .refine((data) => !!data.email || !!data.phone, {
     message: "Provide an email or phone number so we can follow up",
     path: ["email"],
+  })
+  .refine((data) => data.preferredContactMethod !== "EMAIL" || !!data.email, {
+    message: "Add an email address to be contacted by email",
+    path: ["preferredContactMethod"],
+  })
+  .refine((data) => !(data.preferredContactMethod === "SMS" || data.preferredContactMethod === "WHATSAPP") || !!data.phone, {
+    message: "Add a phone number to be contacted that way",
+    path: ["preferredContactMethod"],
   });
 
 export type SupportRequestInput = z.infer<typeof supportRequestSchema>;

@@ -34,6 +34,7 @@ export async function submitSupportRequestAction(_prev: SupportFormState, formDa
     lastName: formData.get("lastName"),
     email: formData.get("email"),
     phone: formData.get("phone"),
+    preferredContactMethod: formData.get("preferredContactMethod"),
     businessUnit: formData.get("businessUnit"),
     category: formData.get("category"),
     subject: formData.get("subject"),

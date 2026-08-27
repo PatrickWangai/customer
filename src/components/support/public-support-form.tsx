@@ -21,6 +21,8 @@ const STORAGE_KEY = "masterways-help-last-request";
 
 /** Radix Select needs a non-empty value for every item — this stands in for businessUnit="" ("General / not sure"). */
 const GENERAL_BUSINESS_UNIT = "__general__";
+/** Same sentinel trick for preferredContactMethod="" ("No preference"). */
+const GENERAL_CONTACT_METHOD = "__no_preference__";
 
 interface StoredResult {
   referenceNumber: string;
@@ -51,6 +53,22 @@ export function PublicSupportForm({ businessUnits }: { businessUnits: PublicBusi
   const [category, setCategory] = useState<string>("Don't Know");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [preferredContactMethod, setPreferredContactMethod] = useState("");
+
+  // Keeps the selection valid as the customer edits which contact fields
+  // they've actually filled in — e.g. clearing the only phone number they'd
+  // entered after picking "SMS" would otherwise leave a dangling preference
+  // pointing at a field that's now empty.
+  function handleEmailChange(value: string) {
+    setEmail(value);
+    if (!value && preferredContactMethod === "EMAIL") setPreferredContactMethod("");
+  }
+  function handlePhoneChange(value: string) {
+    setPhone(value);
+    if (!value && (preferredContactMethod === "SMS" || preferredContactMethod === "WHATSAPP")) setPreferredContactMethod("");
+  }
 
   const classification = useMemo(() => classifyTicket(subject, description), [subject, description]);
   const suggestionApplied = classification && classification.category === category;
@@ -194,15 +212,50 @@ export function PublicSupportForm({ businessUnits }: { businessUnits: PublicBusi
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" placeholder="you@example.com" aria-invalid={!!state.fieldErrors?.email} />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => handleEmailChange(e.target.value)}
+            aria-invalid={!!state.fieldErrors?.email}
+          />
           {state.fieldErrors?.email && <p className="text-xs text-destructive">{state.fieldErrors.email[0]}</p>}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" name="phone" type="tel" placeholder="+254 7XX XXX XXX" aria-invalid={!!state.fieldErrors?.phone} />
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            placeholder="+254 7XX XXX XXX"
+            value={phone}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            aria-invalid={!!state.fieldErrors?.phone}
+          />
         </div>
       </div>
       <p className="text-xs text-muted-foreground">Provide at least one of email or phone so we can follow up.</p>
+
+      {(email || phone) && (
+        <div className="space-y-1.5">
+          <Label htmlFor="preferredContactMethod">How should we reach you?</Label>
+          <input type="hidden" name="preferredContactMethod" value={preferredContactMethod} />
+          <Select value={preferredContactMethod || GENERAL_CONTACT_METHOD} onValueChange={(v) => setPreferredContactMethod(v === GENERAL_CONTACT_METHOD ? "" : v)}>
+            <SelectTrigger id="preferredContactMethod">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={GENERAL_CONTACT_METHOD}>No preference</SelectItem>
+              {email && <SelectItem value="EMAIL">Email</SelectItem>}
+              {phone && <SelectItem value="SMS">SMS</SelectItem>}
+              {phone && <SelectItem value="WHATSAPP">WhatsApp</SelectItem>}
+            </SelectContent>
+          </Select>
+          {state.fieldErrors?.preferredContactMethod && <p className="text-xs text-destructive">{state.fieldErrors.preferredContactMethod[0]}</p>}
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <Label htmlFor="businessUnit">Which service is this about?</Label>

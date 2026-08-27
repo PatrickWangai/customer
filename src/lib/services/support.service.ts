@@ -82,6 +82,7 @@ export async function submitSupportRequest(input: SupportRequestInput): Promise<
     lastName: input.lastName,
     email: input.email,
     phone: input.phone,
+    preferredContactMethod: input.preferredContactMethod,
     businessUnit: input.businessUnit,
     category: input.category,
     subject: input.subject,

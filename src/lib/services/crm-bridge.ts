@@ -6,6 +6,7 @@ export interface CrmBridgeInput {
   lastName: string;
   email?: string | null;
   phone?: string | null;
+  preferredContactMethod?: string | null;
   /** A BusinessUnit.code from the CRM's live list (fetchCrmBusinessUnits below) — passed straight through as businessUnitCode, no label translation. */
   businessUnit?: string | null;
   category: string;
@@ -41,6 +42,7 @@ export async function forwardToCrm(input: CrmBridgeInput): Promise<CrmBridgeResu
         lastName: input.lastName,
         email: input.email || undefined,
         phone: input.phone || undefined,
+        preferredContactMethod: input.preferredContactMethod || undefined,
         businessUnitCode: input.businessUnit || undefined,
         category: input.category,
         subject: input.subject,
