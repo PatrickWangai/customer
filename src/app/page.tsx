@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Phone, MessageCircle, Mail } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PublicSupportForm } from "@/components/support/public-support-form";
 import { TrackRequestForm } from "@/components/support/track-request-form";
@@ -14,6 +15,8 @@ export default async function HelpAndSupportPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const supportEmail = process.env.SUPPORT_EMAIL || "support@masterways.co.ke";
+  const supportPhone = process.env.SUPPORT_PHONE;
+  const supportWhatsApp = process.env.SUPPORT_WHATSAPP;
   const [sp, businessUnits, articles] = await Promise.all([searchParams, fetchCrmBusinessUnits(), fetchCrmKnowledgeArticles()]);
 
   // Lets a "Track your request live" link deep-link straight into "already
@@ -25,13 +28,30 @@ export default async function HelpAndSupportPage({
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b-2 border-foreground bg-card px-4 py-4 sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-md border-2 border-foreground bg-white p-1">
-            <Image src="/logo.png" alt="Masterways" width={32} height={32} className="size-full object-contain" />
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 items-center justify-center rounded-md border-2 border-foreground bg-white p-1">
+              <Image src="/logo.png" alt="Masterways" width={32} height={32} className="size-full object-contain" />
+            </div>
+            <div className="leading-tight">
+              <p className="font-display text-sm font-black uppercase tracking-tight">Masterways Group of Companies</p>
+              <p className="font-mono text-[11px] text-muted-foreground">Help &amp; Support</p>
+            </div>
           </div>
-          <div className="leading-tight">
-            <p className="font-display text-sm font-black uppercase tracking-tight">Masterways Group of Companies</p>
-            <p className="font-mono text-[11px] text-muted-foreground">Help &amp; Support</p>
+          <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-muted-foreground">
+            {supportPhone && (
+              <a href={`tel:${supportPhone}`} className="flex items-center gap-1 hover:text-primary">
+                <Phone className="size-3.5" /> Call us
+              </a>
+            )}
+            {supportWhatsApp && (
+              <a href={`https://wa.me/${supportWhatsApp}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-primary">
+                <MessageCircle className="size-3.5" /> WhatsApp
+              </a>
+            )}
+            <a href={`mailto:${supportEmail}`} className="flex items-center gap-1 hover:text-primary">
+              <Mail className="size-3.5" /> Email
+            </a>
           </div>
         </div>
       </header>

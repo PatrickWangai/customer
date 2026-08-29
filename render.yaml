@@ -15,6 +15,14 @@ services:
         sync: false
       - key: SUPPORT_EMAIL
         value: support@masterways.co.ke
+      # Both optional — the "Call us" / "WhatsApp" header links only render
+      # when set. Phone numbers in international format (e.g. 2547XXXXXXXX),
+      # no "+" needed for SUPPORT_WHATSAPP (passed straight into a wa.me
+      # link). Leave unset via the dashboard to hide either link.
+      - key: SUPPORT_PHONE
+        sync: false
+      - key: SUPPORT_WHATSAPP
+        sync: false
       - key: NODE_ENV
         value: production
       # Server-to-server bridge into the main CRM (separate repo/deployment)
