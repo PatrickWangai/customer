@@ -24,27 +24,27 @@ export default async function HelpAndSupportPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-4 py-4 sm:px-6">
+      <header className="border-b-2 border-foreground bg-card px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-md border border-border bg-white p-1">
+          <div className="flex size-8 items-center justify-center rounded-md border-2 border-foreground bg-white p-1">
             <Image src="/logo.png" alt="Masterways" width={32} height={32} className="size-full object-contain" />
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-semibold">Masterways Group of Companies</p>
-            <p className="text-[11px] text-muted-foreground">Help &amp; Support</p>
+            <p className="font-display text-sm font-black uppercase tracking-tight">Masterways Group of Companies</p>
+            <p className="font-mono text-[11px] text-muted-foreground">Help &amp; Support</p>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6">
         <div className="space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight">How can we help?</h1>
+          <h1 className="font-display text-2xl font-black uppercase tracking-tight">How can we help?</h1>
           <p className="text-sm text-muted-foreground">
             Submit a complaint, service request or general inquiry and our team will follow up.
           </p>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
+        <div className="rounded-lg border-2 border-foreground bg-card p-5 sm:p-6">
           <Tabs defaultValue={initialTab}>
             <TabsList>
               <TabsTrigger value="submit">Submit a request</TabsTrigger>

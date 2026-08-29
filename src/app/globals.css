@@ -2,47 +2,50 @@
 @import "tw-animate-css";
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.375rem;
 
-  --background: #f4f6f9;
-  --foreground: #101828;
+  --background: #f2f7f6;
+  --foreground: #0c1e1b;
 
   --card: #ffffff;
-  --card-foreground: #101828;
+  --card-foreground: #0c1e1b;
 
   --popover: #ffffff;
-  --popover-foreground: #101828;
+  --popover-foreground: #0c1e1b;
 
-  --primary: #1d4e89;
+  --primary: #0d7d6f;
   --primary-foreground: #ffffff;
 
-  --secondary: #eef2f7;
-  --secondary-foreground: #1d2939;
+  --secondary: #e6efed;
+  --secondary-foreground: #0c1e1b;
 
-  --muted: #eef2f7;
-  --muted-foreground: #667085;
+  --muted: #e6efed;
+  --muted-foreground: #5c7370;
 
-  --accent: #eaf1fb;
-  --accent-foreground: #1d4e89;
+  --accent: #dcf3ee;
+  --accent-foreground: #0d7d6f;
 
-  --destructive: #d92d20;
+  --destructive: #d1284a;
   --destructive-foreground: #ffffff;
 
-  --success: #12876f;
+  --success: #0e8a4a;
   --success-foreground: #ffffff;
-  --success-muted: #e7f6f2;
+  --success-muted: #e3f5ea;
 
-  --warning: #b54708;
+  --warning: #b56506;
   --warning-foreground: #ffffff;
-  --warning-muted: #fef0e2;
+  --warning-muted: #fbead2;
 
   --info: #0c5ba0;
   --info-foreground: #ffffff;
   --info-muted: #e8f2fb;
 
-  --border: #e4e7ec;
-  --input: #d0d5dd;
-  --ring: #1d4e89;
+  --border: #d7e2e0;
+  --input: #c3d2cf;
+  --ring: #0d7d6f;
+
+  --shadow-tint: 13 42 38;
+  --scan-rgb: 13 125 111;
 }
 
 @theme inline {
@@ -78,13 +81,41 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-space-mono), ui-monospace, monospace;
+  --font-mono: var(--font-space-mono);
+  --font-display: var(--font-archivo);
 }
 
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+  position: relative;
+}
+
+/* Same subtle scanline texture as the CRM app, so this feels like the same
+   product rather than a linked-out third-party page. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(var(--scan-rgb) / 0.02) 0px,
+    rgb(var(--scan-rgb) / 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 40;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 * {
@@ -99,9 +130,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c9d1dc;
+  background: #c3d2cf;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #aab4c2;
+  background: #a8bdb9;
 }
