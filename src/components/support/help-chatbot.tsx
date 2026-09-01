@@ -280,104 +280,131 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
 
   return (
     <>
+      {/* Floating panel — anchored bottom-right above the FAB, no backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
-          }}
+          data-testid="help-chatbot-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Masterways virtual assistant"
+          className="fixed bottom-20 right-4 z-50 flex w-80 flex-col overflow-hidden rounded-2xl shadow-2xl sm:bottom-24 sm:right-6 sm:w-96"
+          style={{ maxHeight: "min(34rem, calc(100vh - 6rem))" }}
         >
-          <div
-            data-testid="help-chatbot-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Masterways virtual assistant"
-            className="flex h-[32rem] w-[26rem] max-h-[85vh] max-w-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-xl"
-          >
-            <div className="flex items-center justify-between border-b border-border bg-primary/5 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="size-4 text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">Masterways Assistant</p>
-                  <p className="text-[10px] text-muted-foreground">Filing/tracking is a guided flow — &quot;Ask a question&quot; is AI-assisted</p>
+          {/* Header — dark branded band */}
+          <div className="flex items-center gap-3 px-4 py-3.5" style={{ background: "#0f1117" }}>
+            {/* Brand avatar */}
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full" style={{ background: "#1e2435" }}>
+              <Sparkles className="size-4" style={{ color: "#7eb3ff" }} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold leading-tight text-white">Masterways</p>
+              <p className="text-[11px] leading-tight" style={{ color: "#8b95a8" }}>The team can also help</p>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="shrink-0 rounded-md p-1 transition-colors"
+              style={{ color: "#8b95a8" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#ffffff")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#8b95a8")}
+              aria-label="Close chat"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+
+          {/* Messages */}
+          <div ref={listRef} className="flex-1 space-y-2.5 overflow-y-auto p-4" style={{ background: "#ffffff" }}>
+            {messages.map((m) => (
+              <div key={m.id} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className="max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed"
+                  style={
+                    m.from === "user"
+                      ? { background: "#0f1117", color: "#ffffff" }
+                      : { background: "#f3f4f6", color: "#111827" }
+                  }
+                >
+                  {m.text}
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} className="rounded-md p-1 text-muted-foreground hover:bg-secondary" aria-label="Close chat">
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-3">
-              {messages.map((m) => (
-                <div key={m.id} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
-                      m.from === "user" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
-                    }`}
-                  >
-                    {m.text}
-                  </div>
+            ))}
+            {busy && (
+              <div className="flex justify-start">
+                <div className="flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm" style={{ background: "#f3f4f6", color: "#6b7280" }}>
+                  <Loader2 className="size-3.5 animate-spin" /> Thinking…
                 </div>
-              ))}
-              {busy && (
-                <div className="flex justify-start">
-                  <div className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground">
-                    <Loader2 className="size-3.5 animate-spin" /> Thinking...
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {quickReplies.length > 0 && !busy && (
-              <div className="flex flex-wrap gap-1.5 border-t border-border p-2">
-                {quickReplies.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => handleQuickReply(r)}
-                    className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs text-primary hover:bg-primary/10"
-                  >
-                    {r}
-                  </button>
-                ))}
               </div>
             )}
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void handleSend();
-              }}
-              className="flex items-center gap-2 border-t border-border p-2"
-            >
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={busy}
-                placeholder="Describe your problem..."
-                autoFocus
-                className="flex-1 rounded-md border border-input bg-card px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-              />
-              <Button type="submit" size="icon" disabled={busy || !input.trim()} aria-label="Send message">
-                <Send className="size-4" />
-              </Button>
-            </form>
           </div>
+
+          {/* Quick replies */}
+          {quickReplies.length > 0 && !busy && (
+            <div className="flex flex-wrap gap-1.5 border-t px-3 py-2.5" style={{ background: "#ffffff", borderColor: "#e5e7eb" }}>
+              {quickReplies.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => handleQuickReply(r)}
+                  className="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+                  style={{ borderColor: "#d1d5db", color: "#374151", background: "#ffffff" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "#f9fafb"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; }}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <form
+            onSubmit={(e) => { e.preventDefault(); void handleSend(); }}
+            className="flex items-center gap-2 border-t p-3"
+            style={{ background: "#ffffff", borderColor: "#e5e7eb" }}
+          >
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={busy}
+              placeholder="Ask a question…"
+              autoFocus
+              className="flex-1 rounded-xl border px-3.5 py-2 text-sm outline-none transition-shadow disabled:opacity-50"
+              style={{ borderColor: "#e5e7eb", background: "#f9fafb", color: "#111827" }}
+              onFocus={e => (e.currentTarget.style.boxShadow = "0 0 0 2px #0f1117")}
+              onBlur={e => (e.currentTarget.style.boxShadow = "none")}
+            />
+            <button
+              type="submit"
+              disabled={busy || !input.trim()}
+              aria-label="Send message"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-40"
+              style={{ background: "#0f1117", color: "#ffffff" }}
+            >
+              <Send className="size-3.5" />
+            </button>
+          </form>
         </div>
       )}
 
+      {/* Invite nudge */}
       {showInvite && !open && (
-        <div className="fixed bottom-20 right-4 z-40 flex max-w-[calc(100vw-2rem)] items-start gap-2 rounded-lg border border-border bg-card p-3 shadow-lg sm:bottom-24 sm:right-6 sm:max-w-64">
-          <p className="text-sm">Need help? You can chat with our virtual assistant anytime.</p>
+        <div className="fixed bottom-20 right-4 z-40 flex max-w-[calc(100vw-2rem)] items-start gap-2 rounded-xl border border-border bg-card p-3 shadow-lg sm:bottom-24 sm:right-6 sm:max-w-64">
+          <p className="text-sm text-foreground">Need help? Chat with our virtual assistant.</p>
           <button onClick={dismissInvite} className="shrink-0 rounded-md p-0.5 text-muted-foreground hover:bg-secondary" aria-label="Dismiss">
             <X className="size-3.5" />
           </button>
         </div>
       )}
 
+      {/* FAB */}
       <div className="fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
-        <Button size="icon" className="size-12 rounded-full shadow-lg" onClick={toggleOpen} aria-label={open ? "Close chat" : "Open chat"}>
+        <button
+          onClick={toggleOpen}
+          aria-label={open ? "Close chat" : "Open chat"}
+          className="flex size-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
+          style={{ background: "#0f1117", color: "#ffffff" }}
+        >
           {open ? <X className="size-5" /> : <MessageCircle className="size-5" />}
-        </Button>
+        </button>
       </div>
     </>
   );
