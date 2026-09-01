@@ -35,6 +35,7 @@ const INVITE_DISMISSED_KEY = "mw_help_chat_invite_dismissed";
 
 export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<"home" | "chat">("home");
   const [showInvite, setShowInvite] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [stage, setStage] = useState<Stage>("greeting");
@@ -58,15 +59,21 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
 
   function toggleOpen() {
     dismissInvite();
-    const next = !open;
-    if (next && messages.length === 0) {
-      if (!isWithinSupportHours()) {
-        bot(closedHoursMessage());
-      }
-      bot("Hi! I'm the Masterways virtual assistant. How can I help?", ["File a complaint", "Track my request", "Ask a question", "Chat with our team", "Contact & hours"]);
+    if (!open) {
+      setView("home");
+    }
+    setOpen((o) => !o);
+  }
+
+  function startFlow(reply: string) {
+    setView("chat");
+    if (messages.length === 0 && !isWithinSupportHours()) {
+      bot(closedHoursMessage());
+    }
+    if (messages.length === 0) {
       setStage("greeting");
     }
-    setOpen(next);
+    void handleQuickReply(reply);
   }
 
   useEffect(() => {
@@ -279,51 +286,88 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
     await handleSend(reply);
   }
 
+  const PANEL = "fixed bottom-20 right-4 z-50 flex w-[348px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:bottom-24 sm:right-6";
+  const PANEL_HEIGHT = { maxHeight: "min(36rem, calc(100vh - 6rem))" };
+
+  /* ── Shared header ── */
+  const Header = ({ onBack }: { onBack?: () => void }) => (
+    <div className="flex items-center gap-2.5 border-b px-4 py-3" style={{ borderColor: "#e5e7eb" }}>
+      {onBack && (
+        <button onClick={onBack} className="mr-0.5 rounded-md p-1 text-gray-400 hover:text-gray-600" aria-label="Back">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      )}
+      <div className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white">
+        <Image src="/logo.png" alt="Masterways" width={28} height={28} className="size-full object-contain" />
+      </div>
+      <span className="flex-1 text-[15px] font-bold text-gray-900">Masterways</span>
+      <button onClick={() => setOpen(false)} className="rounded-md p-1 text-gray-400 hover:text-gray-600" aria-label="Close">
+        <X className="size-4" />
+      </button>
+    </div>
+  );
+
   return (
     <>
-      {/* Floating panel — anchored bottom-right above the FAB, no backdrop */}
-      {open && (
-        <div
-          data-testid="help-chatbot-panel"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Masterways virtual assistant"
-          className="fixed bottom-20 right-4 z-50 flex w-80 flex-col overflow-hidden rounded-2xl shadow-2xl sm:bottom-24 sm:right-6 sm:w-96"
-          style={{ maxHeight: "min(34rem, calc(100vh - 6rem))" }}
-        >
-          {/* Header — dark branded band */}
-          <div className="flex items-center gap-3 px-4 py-3.5" style={{ background: "#0f1117" }}>
-            {/* Logo */}
-            <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
-              <Image src="/logo.png" alt="Masterways" width={32} height={32} className="size-full object-contain" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold leading-tight text-white">Masterways</p>
-              <p className="text-[11px] leading-tight" style={{ color: "#8b95a8" }}>The team can also help</p>
-            </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="shrink-0 rounded-md p-1 transition-colors"
-              style={{ color: "#8b95a8" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#ffffff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#8b95a8")}
-              aria-label="Close chat"
-            >
-              <X className="size-4" />
-            </button>
+      {open && view === "home" && (
+        <div className={PANEL} style={PANEL_HEIGHT} role="dialog" aria-modal="true" aria-label="Masterways support">
+          <Header />
+
+          {/* Greeting */}
+          <div className="px-5 pt-6 pb-4">
+            <p className="text-2xl font-bold leading-snug text-gray-900">Hi there 👋</p>
+            <p className="text-2xl font-bold leading-snug text-gray-900">How can we help?</p>
           </div>
 
+          {/* Option cards */}
+          <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
+            {[
+              { label: "File a complaint", sub: "Log a complaint or service request", reply: "File a complaint", icon: "📝" },
+              { label: "Track a request", sub: "Check the status of an existing request", reply: "Track my request", icon: "🔍" },
+              { label: "Ask a question", sub: "AI-assisted answers, instantly", reply: "Ask a question", icon: "💬" },
+              { label: "Chat with our team", sub: "Connect to a live agent", reply: "Chat with our team", icon: "👤" },
+            ].map((card) => (
+              <button
+                key={card.label}
+                onClick={() => startFlow(card.reply)}
+                className="flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-colors hover:bg-gray-50"
+                style={{ borderColor: "#e5e7eb" }}
+              >
+                <span className="text-xl leading-none">{card.icon}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900">{card.label}</p>
+                  <p className="text-xs text-gray-500">{card.sub}</p>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 text-gray-400"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            ))}
+          </div>
+
+          {/* Bottom nav */}
+          <div className="flex border-t" style={{ borderColor: "#e5e7eb" }}>
+            <button className="flex flex-1 flex-col items-center gap-0.5 py-3 text-xs font-medium" style={{ color: "#111827" }}>
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7A1 1 0 003 11h1v6a1 1 0 001 1h4v-4h2v4h4a1 1 0 001-1v-6h1a1 1 0 00.707-1.707l-7-7z"/></svg>
+              Home
+            </button>
+            <button onClick={() => { if (messages.length > 0) setView("chat"); }} className="flex flex-1 flex-col items-center gap-0.5 py-3 text-xs font-medium text-gray-400">
+              <MessageCircle className="size-[18px]" />
+              Messages
+            </button>
+          </div>
+        </div>
+      )}
+
+      {open && view === "chat" && (
+        <div className={PANEL} style={PANEL_HEIGHT} role="dialog" aria-modal="true" aria-label="Masterways virtual assistant">
+          <Header onBack={() => setView("home")} />
+
           {/* Messages */}
-          <div ref={listRef} className="flex-1 space-y-2.5 overflow-y-auto p-4" style={{ background: "#ffffff" }}>
+          <div ref={listRef} className="flex-1 space-y-2.5 overflow-y-auto p-4">
             {messages.map((m) => (
               <div key={m.id} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className="max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed"
-                  style={
-                    m.from === "bot"
-                      ? { background: "#0f1117", color: "#ffffff" }
-                      : { background: "#e5e7eb", color: "#111827" }
-                  }
+                  style={m.from === "bot" ? { background: "#111827", color: "#fff" } : { background: "#e5e7eb", color: "#111827" }}
                 >
                   {m.text}
                 </div>
@@ -331,7 +375,7 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
             ))}
             {busy && (
               <div className="flex justify-start">
-                <div className="flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm" style={{ background: "#f3f4f6", color: "#6b7280" }}>
+                <div className="flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm" style={{ background: "#111827", color: "#9ca3af" }}>
                   <Loader2 className="size-3.5 animate-spin" /> Thinking…
                 </div>
               </div>
@@ -340,15 +384,13 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
 
           {/* Quick replies */}
           {quickReplies.length > 0 && !busy && (
-            <div className="flex flex-wrap gap-1.5 border-t px-3 py-2.5" style={{ background: "#ffffff", borderColor: "#e5e7eb" }}>
+            <div className="flex flex-wrap gap-1.5 border-t px-3 py-2.5" style={{ borderColor: "#e5e7eb" }}>
               {quickReplies.map((r) => (
                 <button
                   key={r}
                   onClick={() => handleQuickReply(r)}
-                  className="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-                  style={{ borderColor: "#d1d5db", color: "#374151", background: "#ffffff" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "#f9fafb"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; }}
+                  className="rounded-full border px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  style={{ borderColor: "#d1d5db" }}
                 >
                   {r}
                 </button>
@@ -357,11 +399,7 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
           )}
 
           {/* Input */}
-          <form
-            onSubmit={(e) => { e.preventDefault(); void handleSend(); }}
-            className="flex items-center gap-2 border-t p-3"
-            style={{ background: "#ffffff", borderColor: "#e5e7eb" }}
-          >
+          <form onSubmit={(e) => { e.preventDefault(); void handleSend(); }} className="flex items-center gap-2 border-t p-3" style={{ borderColor: "#e5e7eb" }}>
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -370,15 +408,15 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
               autoFocus
               className="flex-1 rounded-xl border px-3.5 py-2 text-sm outline-none transition-shadow disabled:opacity-50"
               style={{ borderColor: "#e5e7eb", background: "#f9fafb", color: "#111827" }}
-              onFocus={e => (e.currentTarget.style.boxShadow = "0 0 0 2px #0f1117")}
+              onFocus={e => (e.currentTarget.style.boxShadow = "0 0 0 2px #111827")}
               onBlur={e => (e.currentTarget.style.boxShadow = "none")}
             />
             <button
               type="submit"
               disabled={busy || !input.trim()}
-              aria-label="Send message"
+              aria-label="Send"
               className="flex size-8 shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-40"
-              style={{ background: "#0f1117", color: "#ffffff" }}
+              style={{ background: "#111827", color: "#fff" }}
             >
               <Send className="size-3.5" />
             </button>
@@ -388,9 +426,9 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
 
       {/* Invite nudge */}
       {showInvite && !open && (
-        <div className="fixed bottom-20 right-4 z-40 flex max-w-[calc(100vw-2rem)] items-start gap-2 rounded-xl border border-border bg-card p-3 shadow-lg sm:bottom-24 sm:right-6 sm:max-w-64">
-          <p className="text-sm text-foreground">Need help? Chat with our virtual assistant.</p>
-          <button onClick={dismissInvite} className="shrink-0 rounded-md p-0.5 text-muted-foreground hover:bg-secondary" aria-label="Dismiss">
+        <div className="fixed bottom-20 right-4 z-40 flex max-w-[calc(100vw-2rem)] items-start gap-2 rounded-xl border bg-white p-3 shadow-lg sm:bottom-24 sm:right-6 sm:max-w-64" style={{ borderColor: "#e5e7eb" }}>
+          <p className="text-sm text-gray-700">Need help? Chat with our virtual assistant.</p>
+          <button onClick={dismissInvite} className="shrink-0 rounded-md p-0.5 text-gray-400 hover:text-gray-600" aria-label="Dismiss">
             <X className="size-3.5" />
           </button>
         </div>
@@ -402,7 +440,7 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
           onClick={toggleOpen}
           aria-label={open ? "Close chat" : "Open chat"}
           className="flex size-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
-          style={{ background: "#0f1117", color: "#ffffff" }}
+          style={{ background: "#111827", color: "#fff" }}
         >
           {open ? <X className="size-5" /> : <MessageCircle className="size-5" />}
         </button>
