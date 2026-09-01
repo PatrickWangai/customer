@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Send, Sparkles, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
 import { REQUEST_CATEGORIES } from "@/lib/validation/support";
@@ -292,9 +293,9 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
         >
           {/* Header — dark branded band */}
           <div className="flex items-center gap-3 px-4 py-3.5" style={{ background: "#0f1117" }}>
-            {/* Brand avatar */}
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full" style={{ background: "#1e2435" }}>
-              <Sparkles className="size-4" style={{ color: "#7eb3ff" }} />
+            {/* Logo */}
+            <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
+              <Image src="/logo.png" alt="Masterways" width={32} height={32} className="size-full object-contain" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold leading-tight text-white">Masterways</p>
@@ -319,9 +320,9 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
                 <div
                   className="max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed"
                   style={
-                    m.from === "user"
+                    m.from === "bot"
                       ? { background: "#0f1117", color: "#ffffff" }
-                      : { background: "#f3f4f6", color: "#111827" }
+                      : { background: "#e5e7eb", color: "#111827" }
                   }
                 >
                   {m.text}
