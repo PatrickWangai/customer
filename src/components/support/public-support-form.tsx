@@ -10,6 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { submitSupportRequestAction, chatTrackRequestAction } from "@/app/actions";
 import { REQUEST_CATEGORIES } from "@/lib/validation/support";
 import { classifyTicket } from "@/lib/ai/classify-ticket";
+
+const BU_CATEGORY_MAP: Record<string, string[]> = {
+  MRE: ["Rent Payment Issue", "Repairs and Maintenance", "Complaints/Suggestions", "Tenant Statement/Inquiry", "Landlord Statement", "Lease/Tenancy Agreement", "Property Viewing & Sales Inquiry", "Unit Handover/Vacating", "Service Charge Inquiry", "General Inquiry"],
+  MSL: ["Loan Request/Enquiry", "Loan Repayment Inquiry", "Account Statement", "Shares & Dividends", "Membership Application", "Membership Inquiry", "Guarantor Request", "Loan Clearance Certificate", "Savings & Deposits", "General Inquiry"],
+  MIA: ["New Policy/Quotation", "Policy Renewal", "Premium Payment", "Claims", "Policy Inquiry", "Policy Cancellation", "Beneficiary Update", "General Inquiry"],
+  MGC: ["General Inquiry", "Complaint", "Finance & Billing", "IT Support", "HR & Employment", "Supplier/Vendor Inquiry"],
+};
+const PORTAL_DEFAULT_CATEGORIES = ["General Inquiry", "Complaint", "Rent Payment Issue", "Repairs and Maintenance", "Loan Request/Enquiry", "Account Statement", "New Policy/Quotation", "Claims"];
 import { TrackingResultCard } from "@/components/support/tracking-result-card";
 import { PresenceTracker } from "@/components/support/presence-tracker";
 import type { PublicBusinessUnit, SupportFormState, TrackedRequest } from "@/lib/validation/support";
@@ -50,7 +58,18 @@ function SubmitButton() {
 export function PublicSupportForm({ businessUnits }: { businessUnits: PublicBusinessUnit[] }) {
   const [state, formAction] = useActionState(submitSupportRequestAction, initialState);
   const [businessUnit, setBusinessUnit] = useState("");
-  const [category, setCategory] = useState<string>("Don't Know");
+  const [category, setCategory] = useState<string>("General Inquiry");
+
+  const visibleCategories = useMemo(
+    () => (businessUnit && BU_CATEGORY_MAP[businessUnit] ? BU_CATEGORY_MAP[businessUnit] : PORTAL_DEFAULT_CATEGORIES),
+    [businessUnit],
+  );
+
+  useEffect(() => {
+    if (businessUnit && BU_CATEGORY_MAP[businessUnit] && !BU_CATEGORY_MAP[businessUnit].includes(category)) {
+      setCategory(BU_CATEGORY_MAP[businessUnit][0]);
+    }
+  }, [businessUnit, category]);
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [email, setEmail] = useState("");
@@ -67,7 +86,7 @@ export function PublicSupportForm({ businessUnits }: { businessUnits: PublicBusi
   }
   function handlePhoneChange(value: string) {
     setPhone(value);
-    if (!value && (preferredContactMethod === "SMS" || preferredContactMethod === "WHATSAPP")) setPreferredContactMethod("");
+    if (!value && (preferredContactMethod === "SMS" || preferredContactMethod === "WHATSAPP" || preferredContactMethod === "PHONE")) setPreferredContactMethod("");
   }
 
   const classification = useMemo(() => classifyTicket(subject, description), [subject, description]);
@@ -251,6 +270,7 @@ export function PublicSupportForm({ businessUnits }: { businessUnits: PublicBusi
               {email && <SelectItem value="EMAIL">Email</SelectItem>}
               {phone && <SelectItem value="SMS">SMS</SelectItem>}
               {phone && <SelectItem value="WHATSAPP">WhatsApp</SelectItem>}
+              {phone && <SelectItem value="PHONE">Call me</SelectItem>}
             </SelectContent>
           </Select>
           {state.fieldErrors?.preferredContactMethod && <p className="text-xs text-destructive">{state.fieldErrors.preferredContactMethod[0]}</p>}
@@ -283,7 +303,7 @@ export function PublicSupportForm({ businessUnits }: { businessUnits: PublicBusi
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {REQUEST_CATEGORIES.map((c) => (
+            {visibleCategories.map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
               </SelectItem>

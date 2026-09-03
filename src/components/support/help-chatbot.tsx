@@ -168,7 +168,7 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
           lastName: draft.current.lastName ?? "Visitor",
           email: draft.current.email,
           phone: draft.current.phone,
-          category: draft.current.category ?? "Customer Care",
+          category: draft.current.category ?? "General Inquiry",
           description: draft.current.description ?? text,
         });
         setBusy(false);

@@ -7,13 +7,30 @@ export interface TicketClassification {
 const URGENT_KEYWORDS = ["flood", "fire", "gas leak", "no water", "no power", "break-in", "burglary", "emergency", "electric shock", "collapsed"];
 const HIGH_KEYWORDS = ["leak", "broken", "not working", "urgent", "asap", "overflowing", "no access", "locked out", "burst"];
 const CATEGORY_KEYWORDS: { category: string; keywords: string[] }[] = [
-  { category: "Property Management", keywords: ["leak", "broken", "repair", "fix", "plumbing", "electrical", "faulty", "not working", "maintenance"] },
-  { category: "Finance", keywords: ["invoice", "bill", "payment", "charge", "refund", "receipt", "overcharged"] },
-  { category: "Sales & Marketing", keywords: ["buy", "purchase", "interested in", "available units", "price list", "book a viewing", "join the sacco", "membership", "insurance quote", "new customer"] },
-  { category: "HR & Administration", keywords: ["job", "career", "vacancy", "recruitment", "employment", "internship", "apply for a job", "cv", "resume"] },
-  { category: "Complaint", keywords: ["complain", "unhappy", "unacceptable", "rude", "disappointed", "noise", "neighbor"] },
-  { category: "Technical Support", keywords: ["app", "login", "portal", "website", "password", "system"] },
-  { category: "Customer Care", keywords: ["request", "need", "install", "upgrade", "access card", "parking", "update my", "change my", "contact details", "move out", "vacate"] },
+  // MRE — Real Estate
+  { category: "Repairs and Maintenance", keywords: ["leak", "broken", "repair", "fix", "plumbing", "electrical", "faulty", "not working", "maintenance", "burst pipe", "no water", "blocked drain"] },
+  { category: "Rent Payment Issue", keywords: ["rent", "invoice", "bill", "payment", "charge", "refund", "receipt", "overcharged", "arrears", "balance"] },
+  { category: "Landlord Statement", keywords: ["landlord statement", "owner statement", "remittance", "net proceeds", "landlord account"] },
+  { category: "Tenant Statement/Inquiry", keywords: ["tenant statement", "my account", "my balance", "my payments", "tenancy record"] },
+  { category: "Lease/Tenancy Agreement", keywords: ["lease", "tenancy agreement", "contract", "renewal", "extension", "terms"] },
+  { category: "Property Viewing & Sales Inquiry", keywords: ["buy", "purchase", "interested in", "available units", "price list", "book a viewing", "property for sale", "listing"] },
+  { category: "Unit Handover/Vacating", keywords: ["move out", "vacate", "handover", "surrender", "terminate tenancy", "notice to vacate", "end lease"] },
+  { category: "Service Charge Inquiry", keywords: ["service charge", "management fee", "caretaker", "security fee", "utilities"] },
+  // SACCO
+  { category: "Loan Request/Enquiry", keywords: ["loan", "borrow", "credit", "advance", "lend", "finance facility"] },
+  { category: "Loan Repayment Inquiry", keywords: ["loan repayment", "loan balance", "outstanding loan", "loan statement", "clearance"] },
+  { category: "Shares & Dividends", keywords: ["shares", "dividends", "interest", "contribution", "share capital"] },
+  { category: "Membership Application", keywords: ["join sacco", "become a member", "new member", "membership form", "register"] },
+  { category: "Savings & Deposits", keywords: ["savings", "deposit", "withdraw", "account balance", "current account"] },
+  // Insurance
+  { category: "New Policy/Quotation", keywords: ["insurance quote", "new policy", "cover", "get insured", "premium quote"] },
+  { category: "Policy Renewal", keywords: ["renewal", "renew policy", "expiring", "lapse"] },
+  { category: "Claims", keywords: ["claim", "accident", "loss", "damage", "incident", "compensation", "reimbursement"] },
+  { category: "Policy Inquiry", keywords: ["policy", "cover details", "insured amount", "schedule", "certificate"] },
+  // General
+  { category: "Complaints/Suggestions", keywords: ["complain", "unhappy", "unacceptable", "rude", "disappointed", "noise", "neighbour", "neighbor", "suggest", "feedback"] },
+  { category: "IT Support", keywords: ["app", "login", "portal", "website", "password", "system", "technical", "error", "not loading"] },
+  { category: "HR & Employment", keywords: ["job", "career", "vacancy", "recruitment", "employment", "internship", "apply for a job", "cv", "resume"] },
 ];
 
 /**
@@ -35,7 +52,7 @@ export function classifyTicket(subject: string, description: string): TicketClas
     matchedKeyword = HIGH_KEYWORDS.find((k) => text.includes(k)) ?? null;
   }
 
-  let category = "Customer Care";
+  let category = "General Inquiry";
   for (const entry of CATEGORY_KEYWORDS) {
     if (entry.keywords.some((k) => text.includes(k))) {
       category = entry.category;

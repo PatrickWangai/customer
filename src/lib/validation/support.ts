@@ -3,7 +3,20 @@ import { z } from "zod";
 // Must match the CRM's TICKET_CATEGORIES exactly, string for string — these
 // cross the server-to-server bridge as plain strings and are validated
 // there against its own enum (see the CRM's publicSupportRequestSchema).
-export const REQUEST_CATEGORIES = ["Finance", "Property Management", "Sales & Marketing", "HR & Administration", "Technical Support", "Complaint", "Customer Care", "Don't Know"] as const;
+export const REQUEST_CATEGORIES = [
+  // MRE — Real Estate
+  "Rent Payment Issue", "Tenant Statement/Inquiry", "Landlord Statement", "Repairs and Maintenance",
+  "Lease/Tenancy Agreement", "Property Viewing & Sales Inquiry", "Unit Handover/Vacating", "Service Charge Inquiry",
+  // SACCO
+  "Loan Request/Enquiry", "Loan Repayment Inquiry", "Account Statement", "Shares & Dividends",
+  "Membership Application", "Membership Inquiry", "Guarantor Request", "Loan Clearance Certificate", "Savings & Deposits",
+  // Insurance
+  "New Policy/Quotation", "Policy Renewal", "Premium Payment", "Claims",
+  "Policy Inquiry", "Policy Cancellation", "Beneficiary Update",
+  // General
+  "Complaints/Suggestions", "General Inquiry", "Finance & Billing", "IT Support",
+  "HR & Employment", "Supplier/Vendor Inquiry", "Complaint",
+] as const;
 
 /** A business unit as fetched live from the CRM's /api/public/business-units — see crm-bridge.ts's fetchCrmBusinessUnits. Business units are admin-creatable/deletable in the CRM, so this list is never hardcoded here. */
 export interface PublicBusinessUnit {
@@ -13,7 +26,7 @@ export interface PublicBusinessUnit {
 
 // Must match the CRM's PREFERRED_CONTACT_METHODS exactly — crosses the
 // bridge as a plain string and is validated there too.
-export const PREFERRED_CONTACT_METHODS = ["EMAIL", "SMS", "WHATSAPP"] as const;
+export const PREFERRED_CONTACT_METHODS = ["EMAIL", "SMS", "WHATSAPP", "PHONE"] as const;
 export type PreferredContactMethod = (typeof PREFERRED_CONTACT_METHODS)[number];
 
 export const supportRequestSchema = z
@@ -36,7 +49,7 @@ export const supportRequestSchema = z
     message: "Add an email address to be contacted by email",
     path: ["preferredContactMethod"],
   })
-  .refine((data) => !(data.preferredContactMethod === "SMS" || data.preferredContactMethod === "WHATSAPP") || !!data.phone, {
+  .refine((data) => !(data.preferredContactMethod === "SMS" || data.preferredContactMethod === "WHATSAPP" || data.preferredContactMethod === "PHONE") || !!data.phone, {
     message: "Add a phone number to be contacted that way",
     path: ["preferredContactMethod"],
   });
