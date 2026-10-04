@@ -7,7 +7,7 @@ import { FaqList } from "@/components/support/faq-list";
 import { HelpChatbot } from "@/components/support/help-chatbot";
 import { PresenceTracker } from "@/components/support/presence-tracker";
 import { VisitorChatWidget } from "@/components/support/visitor-chat-widget";
-import { fetchCrmBusinessUnits, fetchCrmKnowledgeArticles } from "@/lib/services/crm-bridge";
+import { fetchCrmBusinessUnits, fetchCrmKnowledgeArticles, fetchCrmSupportContact } from "@/lib/services/crm-bridge";
 
 export default async function HelpAndSupportPage({
   searchParams,
@@ -15,9 +15,13 @@ export default async function HelpAndSupportPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const supportEmail = process.env.SUPPORT_EMAIL || "support@masterways.co.ke";
-  const supportPhone = process.env.SUPPORT_PHONE;
-  const supportWhatsApp = process.env.SUPPORT_WHATSAPP;
-  const [sp, businessUnits, articles] = await Promise.all([searchParams, fetchCrmBusinessUnits(), fetchCrmKnowledgeArticles()]);
+  const [sp, businessUnits, articles, supportContact] = await Promise.all([
+    searchParams,
+    fetchCrmBusinessUnits(),
+    fetchCrmKnowledgeArticles(),
+    fetchCrmSupportContact(),
+  ]);
+  const { phone: supportPhone, whatsapp: supportWhatsApp } = supportContact;
 
   // Lets a "Track your request live" link deep-link straight into "already
   // looked up" — mirrors the same param handling in the CRM repo's /help page.

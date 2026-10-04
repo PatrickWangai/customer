@@ -139,6 +139,37 @@ export async function fetchCrmBusinessUnits(): Promise<PublicBusinessUnit[]> {
   }
 }
 
+export interface CrmSupportContact {
+  phone: string | null;
+  whatsapp: string | null;
+}
+
+/**
+ * Live supportPhone/supportWhatsApp from the CRM's own /admin/settings,
+ * replacing this app's old SUPPORT_PHONE/SUPPORT_WHATSAPP env vars so an
+ * admin only has to update one place. Returns both null on any failure
+ * (not configured, unreachable, bad response) — caller just hides the
+ * links, same as when either was unset before.
+ */
+export async function fetchCrmSupportContact(): Promise<CrmSupportContact> {
+  const baseUrl = process.env.CRM_API_URL;
+  const apiKey = process.env.PUBLIC_API_KEY;
+  if (!baseUrl || !apiKey) return { phone: null, whatsapp: null };
+
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/public/support-contact`, {
+      headers: { "x-api-key": apiKey },
+      signal: AbortSignal.timeout(5000),
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return { phone: null, whatsapp: null };
+    const data = (await res.json()) as { phone?: string | null; whatsapp?: string | null };
+    return { phone: data.phone ?? null, whatsapp: data.whatsapp ?? null };
+  } catch {
+    return { phone: null, whatsapp: null };
+  }
+}
+
 export interface CrmKnowledgeArticle {
   id: string;
   title: string;
