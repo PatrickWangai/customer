@@ -1,24 +1,30 @@
 import type { Metadata } from "next";
-import { Inter, Space_Mono, Archivo } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const inter = Inter({
+// The fonts are files in ./fonts rather than next/font/google, which fetches
+// them from Google during every build — and a build that can't reach Google
+// fails and takes the live site down. See fonts/README.md.
+const inter = localFont({
+  src: "./fonts/inter-latin.woff2",
+  weight: "100 900",
   variable: "--font-inter",
-  subsets: ["latin"],
   display: "swap",
 });
 
-const spaceMono = Space_Mono({
+const spaceMono = localFont({
+  src: [
+    { path: "./fonts/space-mono-latin-400.woff2", weight: "400" },
+    { path: "./fonts/space-mono-latin-700.woff2", weight: "700" },
+  ],
   variable: "--font-space-mono",
-  subsets: ["latin"],
-  weight: ["400", "700"],
   display: "swap",
 });
 
-const archivo = Archivo({
+const archivo = localFont({
+  src: "./fonts/archivo-latin.woff2",
+  weight: "700 900",
   variable: "--font-archivo",
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
   display: "swap",
 });
 
