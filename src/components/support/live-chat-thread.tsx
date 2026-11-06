@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useVisibleInterval } from "@/hooks/use-visible-interval";
 import type { LiveChatMessage } from "@/lib/validation/support";
 
 const POLL_MS = 8_000;
@@ -28,23 +29,18 @@ export function LiveChatThread({ apiBase, ticketNumber, email }: { apiBase: stri
   const listRef = useRef<HTMLDivElement>(null);
   const endpoint = `${apiBase.replace(/\/$/, "")}/api/public/live-chat`;
 
+  // Paused while the tab is hidden; catches up the moment the customer is back.
+  useVisibleInterval(async () => {
+    const res = await fetch(`${endpoint}?ticketNumber=${encodeURIComponent(ticketNumber)}&email=${encodeURIComponent(email)}`).catch(() => null);
+    if (!res || !res.ok) return;
+    const data = (await res.json().catch(() => null)) as { ok: boolean; messages?: LiveChatMessage[] } | null;
+    if (data?.ok && data.messages) setMessages(data.messages);
+  }, POLL_MS);
+
   useEffect(() => {
-    let cancelled = false;
-    async function tick() {
-      const res = await fetch(`${endpoint}?ticketNumber=${encodeURIComponent(ticketNumber)}&email=${encodeURIComponent(email)}`).catch(() => null);
-      if (!res || !res.ok || cancelled) return;
-      const data = (await res.json().catch(() => null)) as { ok: boolean; messages?: LiveChatMessage[] } | null;
-      if (data?.ok && data.messages) setMessages(data.messages);
-    }
-    void tick();
-    const id = setInterval(tick, POLL_MS);
     const clock = setInterval(() => setNow(Date.now()), 5_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-      clearInterval(clock);
-    };
-  }, [endpoint, ticketNumber, email]);
+    return () => clearInterval(clock);
+  }, []);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });

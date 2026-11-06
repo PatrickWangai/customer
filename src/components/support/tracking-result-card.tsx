@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { SupportStageStepper } from "@/components/support/support-stage-stepper";
 import { ResponseCountdown } from "@/components/support/response-countdown";
 import { LiveChatThread } from "@/components/support/live-chat-thread";
+import { useVisibleInterval } from "@/hooks/use-visible-interval";
 import type { TrackedRequest } from "@/lib/validation/support";
 
 const POLL_MS = 45_000;
@@ -36,7 +37,6 @@ export function TrackingResultCard({
 }) {
   const crmUrl = process.env.NEXT_PUBLIC_CRM_URL;
   const [live, setLive] = useState(result);
-  const firedInitialRef = useRef(false);
 
   // A fresh `result` prop (e.g. the parent re-ran a manual lookup) always
   // wins over whatever polling last fetched — set during render rather than
@@ -47,29 +47,20 @@ export function TrackingResultCard({
     setLive(result);
   }
 
-  useEffect(() => {
-    if (!refreshAction || !email || live.stage === 3) return;
-    let cancelled = false;
-    const referenceNumber = result.referenceNumber;
-    async function tick() {
-      const res = await refreshAction!(referenceNumber, email!);
-      if (cancelled || !res.ok || !res.result) return;
+  const isLive = !!refreshAction && !!email && live.stage !== 3;
+
+  // Paused while the tab is hidden, which also leaves more of the help-track
+  // rate limit for manual lookups.
+  useVisibleInterval(
+    async () => {
+      if (!refreshAction || !email) return;
+      const res = await refreshAction(result.referenceNumber, email).catch(() => null);
+      if (!res?.ok || !res.result) return;
       setLive(res.result);
       onRefresh?.(res.result);
-    }
-    if (!firedInitialRef.current) {
-      firedInitialRef.current = true;
-      void tick();
-    }
-    const id = setInterval(tick, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- onRefresh intentionally excluded: callers should useCallback it, but if they don't, we'd rather keep polling on a stable cadence than restart the interval on every parent render
-  }, [refreshAction, email, live.stage, result.referenceNumber]);
-
-  const isLive = !!refreshAction && !!email && live.stage !== 3;
+    },
+    isLive ? POLL_MS : null,
+  );
 
   return (
     <div className="rounded-lg border border-border bg-card p-5">

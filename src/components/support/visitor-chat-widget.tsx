@@ -4,8 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OPEN_LIVE_CHAT_EVENT } from "@/lib/live-chat-events";
+import { useVisibleInterval } from "@/hooks/use-visible-interval";
 
-const POLL_MS = 8_000;
+// Quick while a conversation is going; slower while the widget is only
+// watching for a first message from staff. Neither runs while the tab is hidden.
+const CHATTING_POLL_MS = 8_000;
+const WAITING_POLL_MS = 30_000;
 const SESSION_KEY = "mw_help_session_id";
 
 interface VisitorMessage {
@@ -51,26 +55,20 @@ export function VisitorChatWidget({ apiBase }: { apiBase: string }) {
     return () => window.removeEventListener(OPEN_LIVE_CHAT_EVENT, onOpenRequest);
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function tick() {
+  useVisibleInterval(
+    async () => {
       let sessionId = localStorage.getItem(SESSION_KEY);
       if (!sessionId) {
         sessionId = crypto.randomUUID();
         localStorage.setItem(SESSION_KEY, sessionId);
       }
       const res = await fetch(`${endpoint}?sessionId=${encodeURIComponent(sessionId)}`).catch(() => null);
-      if (!res || !res.ok || cancelled) return;
+      if (!res || !res.ok) return;
       const data = (await res.json().catch(() => null)) as { ok: boolean; messages?: VisitorMessage[] } | null;
       if (data?.ok && data.messages) setMessages(data.messages);
-    }
-    void tick();
-    const id = setInterval(tick, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [endpoint]);
+    },
+    forcedOpen || messages.length > 0 ? CHATTING_POLL_MS : WAITING_POLL_MS,
+  );
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
