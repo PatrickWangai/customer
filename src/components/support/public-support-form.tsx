@@ -159,7 +159,7 @@ export function PublicSupportForm({ businessUnits }: { businessUnits: PublicBusi
       <>
         {popupOpen && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[3px]"
             onClick={() => setPopupOpen(false)}
             role="dialog"
             aria-modal="true"

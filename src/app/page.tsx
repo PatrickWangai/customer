@@ -31,7 +31,7 @@ export default async function HelpAndSupportPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-4 py-4 sm:px-6">
+      <header className="sticky top-0 z-30 border-b border-border bg-card/75 px-4 py-4 backdrop-blur-xl backdrop-saturate-150 supports-[not(backdrop-filter:blur(1px))]:bg-card sm:px-6">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 items-center justify-center rounded-md border border-border bg-white p-1">
