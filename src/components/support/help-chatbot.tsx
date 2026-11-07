@@ -426,7 +426,7 @@ export function HelpChatbot({ supportEmail }: { supportEmail: string }) {
 
       {/* Invite nudge */}
       {showInvite && !open && (
-        <div className="fixed bottom-20 right-4 z-40 flex max-w-[calc(100vw-2rem)] items-start gap-2 rounded-xl border bg-white/75 p-3 shadow-lg backdrop-blur-xl backdrop-saturate-150 supports-[not(backdrop-filter:blur(1px))]:bg-white sm:bottom-24 sm:right-6 sm:max-w-64" style={{ borderColor: "#e5e7eb" }}>
+        <div className="fixed bottom-20 right-4 z-40 flex max-w-[calc(100vw-2rem)] items-start gap-2 rounded-2xl border border-white/70 bg-white/45 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,1),0_0_0_0.5px_rgba(12,30,27,0.12),0_12px_32px_-14px_rgba(12,30,27,0.4)] backdrop-blur-[8px] backdrop-saturate-[1.2] supports-[not(backdrop-filter:blur(1px))]:bg-white sm:bottom-24 sm:right-6 sm:max-w-64">
           <p className="text-sm text-gray-700">Need help? Chat with our virtual assistant.</p>
           <button onClick={dismissInvite} className="shrink-0 rounded-md p-0.5 text-gray-400 hover:text-gray-600" aria-label="Dismiss">
             <X className="size-3.5" />
