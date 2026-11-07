@@ -45,7 +45,6 @@
   --ring: #0d7d6f;
 
   --shadow-tint: 13 42 38;
-  --scan-rgb: 13 125 111;
 }
 
 @theme inline {
@@ -91,23 +90,6 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans);
   position: relative;
-}
-
-/* Same subtle scanline texture as the CRM app, so this feels like the same
-   product rather than a linked-out third-party page. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgb(var(--scan-rgb) / 0.02) 0px,
-    rgb(var(--scan-rgb) / 0.02) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  z-index: 40;
 }
 
 @media (prefers-reduced-motion: reduce) {
